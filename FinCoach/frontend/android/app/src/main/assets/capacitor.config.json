@@ -1,0 +1,8 @@
+{
+	"appId": "com.fincoach.app",
+	"appName": "Financial Coach",
+	"webDir": "dist/frontend/browser",
+	"server": {
+		"androidScheme": "https"
+	}
+}
