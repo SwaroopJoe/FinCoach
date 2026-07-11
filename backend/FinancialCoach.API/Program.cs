@@ -31,7 +31,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-if (app.Configuration.GetValue<bool>("Database:AutoCreate"))
+if (bool.TryParse(app.Configuration["Database:AutoCreate"], out var autoCreateDatabase) && autoCreateDatabase)
 {
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<FinancialCoachDbContext>();
@@ -51,6 +51,7 @@ app.UseCors("LocalFrontend");
 
 app.UseAuthorization();
 
+app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 app.MapControllers();
 
 app.Run();

@@ -11,7 +11,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        var provider = configuration.GetValue<string>("Database:Provider") ?? "Sqlite";
+        var provider = configuration["Database:Provider"] ?? "Sqlite";
         var connectionString = configuration.GetConnectionString("DefaultConnection") ?? "Data Source=financialcoach.db";
 
         services.AddDbContext<FinancialCoachDbContext>(options =>

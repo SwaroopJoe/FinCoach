@@ -36,12 +36,14 @@ Cors__AllowedOrigins__1=https://<your-web-frontend-domain>
 ## Render Setup
 
 1. Push the repo to GitHub.
-2. In Render, create a new Web Service.
-3. Choose the repo.
-4. Use Docker.
-5. Set the root directory to `backend` if Render asks for one.
-6. Add the environment variables above.
+2. In Render, choose Blueprint or Web Service.
+3. Choose the `SwaroopJoe/FinCoach` repo.
+4. If using Blueprint, Render reads `render.yaml` and creates `financial-coach-api`.
+5. If using Web Service manually, use Docker and set the root directory to `backend` if Render asks for one.
+6. Add `ConnectionStrings__DefaultConnection` as a secret environment variable.
 7. Deploy.
+
+The API exposes `/health` for Render health checks.
 
 After deployment, Render gives a URL like:
 
