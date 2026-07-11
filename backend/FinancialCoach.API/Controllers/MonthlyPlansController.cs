@@ -9,14 +9,14 @@ namespace FinancialCoach.API.Controllers;
 public sealed class MonthlyPlansController(IMonthlyPlanningService monthlyPlanningService) : ControllerBase
 {
     [HttpGet("current/{userProfileId:guid}")]
-    public async Task<ActionResult<MonthlyPlanResponse>> GetCurrent(Guid userProfileId, CancellationToken cancellationToken)
+    public async Task<ActionResult<MonthlyPlanResponse?>> GetCurrent(Guid userProfileId, CancellationToken cancellationToken)
     {
         var plan = await monthlyPlanningService.GetCurrentAsync(userProfileId, cancellationToken);
-        return plan is null ? NotFound() : Ok(plan);
+        return Ok(plan);
     }
 
     [HttpGet("{userProfileId:guid}/{year:int}/{month:int}")]
-    public async Task<ActionResult<MonthlyPlanResponse>> GetByMonth(Guid userProfileId, int year, int month, CancellationToken cancellationToken)
+    public async Task<ActionResult<MonthlyPlanResponse?>> GetByMonth(Guid userProfileId, int year, int month, CancellationToken cancellationToken)
     {
         if (month is < 1 or > 12)
         {
@@ -24,7 +24,7 @@ public sealed class MonthlyPlansController(IMonthlyPlanningService monthlyPlanni
         }
 
         var plan = await monthlyPlanningService.GetByMonthAsync(userProfileId, new DateTime(year, month, 1), cancellationToken);
-        return plan is null ? NotFound() : Ok(plan);
+        return Ok(plan);
     }
 
     [HttpPost]

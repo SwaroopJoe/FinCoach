@@ -25,12 +25,12 @@ export class ApiService {
     return this.http.put<UserProfile>(`${this.baseUrl}/profile`, profile);
   }
 
-  getCurrentMonthlyPlan(userProfileId: string): Observable<MonthlyPlan> {
-    return this.http.get<MonthlyPlan>(`${this.baseUrl}/monthly-plans/current/${userProfileId}`);
+  getCurrentMonthlyPlan(userProfileId: string): Observable<MonthlyPlan | null> {
+    return this.http.get<MonthlyPlan | null>(`${this.baseUrl}/monthly-plans/current/${userProfileId}`);
   }
 
-  getMonthlyPlanForMonth(userProfileId: string, year: number, month: number): Observable<MonthlyPlan> {
-    return this.http.get<MonthlyPlan>(`${this.baseUrl}/monthly-plans/${userProfileId}/${year}/${month}`);
+  getMonthlyPlanForMonth(userProfileId: string, year: number, month: number): Observable<MonthlyPlan | null> {
+    return this.http.get<MonthlyPlan | null>(`${this.baseUrl}/monthly-plans/${userProfileId}/${year}/${month}`);
   }
 
   saveMonthlyPlan(plan: Omit<MonthlyPlan, 'id' | 'totalIncome' | 'totalAllocation' | 'remainingBalance' | 'totalBorrowingShortage' | 'savingsRate'>): Observable<MonthlyPlan> {

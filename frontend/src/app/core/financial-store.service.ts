@@ -92,7 +92,8 @@ export class FinancialStoreService {
     this.error.set(null);
 
     try {
-      const plan = this.calculatePlan(await firstValueFrom(this.api.getCurrentMonthlyPlan(profile.id)));
+      const response = await firstValueFrom(this.api.getCurrentMonthlyPlan(profile.id));
+      const plan = response ? this.calculatePlan(response) : this.createMonthlyPlanDraft(profile, this.selectedPlanMonth());
       this.selectedPlanMonth.set(this.normalizeMonthIso(plan.planMonth));
       this.monthlyPlan.set(plan);
       return plan;
@@ -124,7 +125,8 @@ export class FinancialStoreService {
     this.error.set(null);
 
     try {
-      const plan = this.calculatePlan(await firstValueFrom(this.api.getMonthlyPlanForMonth(profile.id, year, month)));
+      const response = await firstValueFrom(this.api.getMonthlyPlanForMonth(profile.id, year, month));
+      const plan = response ? this.calculatePlan(response) : this.createMonthlyPlanDraft(profile, this.selectedPlanMonth());
       this.monthlyPlan.set(plan);
       return plan;
     } catch (error) {
@@ -161,6 +163,12 @@ export class FinancialStoreService {
 
     try {
       const previous = await firstValueFrom(this.api.getCurrentMonthlyPlan(profile.id));
+      if (!previous) {
+        const draft = this.createMonthlyPlanDraft(profile, this.selectedPlanMonth());
+        this.monthlyPlan.set(draft);
+        return draft;
+      }
+
       const draft = this.calculatePlan({
         ...previous,
         id: '',
