@@ -318,7 +318,7 @@ export class FinancialStoreService {
     }
   }
 
-  async saveInvestment(holding: Omit<InvestmentHolding, 'id' | 'investedAmount' | 'currentValue' | 'gainLoss' | 'gainLossPercent' | 'projectedValueOneYear' | 'projectedValueThreeYears' | 'projectedValueFiveYears' | 'contributions'>, id?: string): Promise<InvestmentHolding> {
+  async saveInvestment(holding: Omit<InvestmentHolding, 'id' | 'investedAmount' | 'currentValue' | 'gainLoss' | 'gainLossPercent' | 'projectedValueOneYear' | 'projectedValueThreeYears' | 'projectedValueFiveYears' | 'projectedMaturityValue' | 'contributions'>, id?: string): Promise<InvestmentHolding> {
     this.saving.set(true);
     this.error.set(null);
 

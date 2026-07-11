@@ -88,6 +88,7 @@ export interface InvestmentHolding {
   averageCost: number;
   currentRate: number;
   expectedAnnualReturnPercent: number;
+  tenureYears: number;
   notes: string;
   investedAmount?: number;
   currentValue?: number;
@@ -96,6 +97,7 @@ export interface InvestmentHolding {
   projectedValueOneYear?: number;
   projectedValueThreeYears?: number;
   projectedValueFiveYears?: number;
+  projectedMaturityValue?: number;
   contributions?: InvestmentContribution[];
 }
 

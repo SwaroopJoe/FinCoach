@@ -26,6 +26,7 @@ import { InvestmentCategory, InvestmentHolding } from '../models/finance.models'
       <div><span>Current value</span><strong>{{ store.investments().totalCurrentValue | currency:'INR':'symbol':'1.0-0' }}</strong></div>
       <div><span>Gain / loss</span><strong>{{ store.investments().totalGainLoss | currency:'INR':'symbol':'1.0-0' }}</strong></div>
       <div><span>Return</span><strong>{{ store.investments().totalGainLossPercent | number:'1.0-2' }}%</strong></div>
+      <div><span>Maturity outlook</span><strong>{{ totalMaturityValue() | currency:'INR':'symbol':'1.0-0' }}</strong></div>
     </section>
 
     <section class="investment-layout">
@@ -39,10 +40,10 @@ import { InvestmentCategory, InvestmentHolding } from '../models/finance.models'
             <mat-form-field appearance="outline"><mat-label>Name</mat-label><input matInput formControlName="name" placeholder="Gold, Nifty SIP, Apple stock" /></mat-form-field>
             <label class="field-label">Category<select formControlName="category"><option value="Gold">Gold</option><option value="MutualFundSip">Mutual fund / SIP</option><option value="Stock">Stock</option><option value="FixedDepositPpf">FD / PPF</option><option value="Custom">Custom</option></select></label>
             <mat-form-field appearance="outline"><mat-label>Custom category</mat-label><input matInput formControlName="customCategory" /></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Quantity</mat-label><input matInput type="number" formControlName="quantity" /></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Average cost</mat-label><input matInput type="number" formControlName="averageCost" /></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Current rate</mat-label><input matInput type="number" formControlName="currentRate" /></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Expected annual return %</mat-label><input matInput type="number" formControlName="expectedAnnualReturnPercent" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Amount invested</mat-label><input matInput type="number" formControlName="amountInvested" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Current value</mat-label><input matInput type="number" formControlName="currentValue" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Expected annual growth %</mat-label><input matInput type="number" formControlName="expectedAnnualReturnPercent" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Remaining tenure years</mat-label><input matInput type="number" formControlName="tenureYears" /></mat-form-field>
             <mat-form-field appearance="outline" class="wide"><mat-label>Notes</mat-label><input matInput formControlName="notes" /></mat-form-field>
             <button mat-flat-button type="submit" [disabled]="holdingForm.invalid || store.saving()">Save holding</button>
           </form>
@@ -54,7 +55,7 @@ import { InvestmentCategory, InvestmentHolding } from '../models/finance.models'
           <mat-card class="panel holding-card">
             <mat-card-header>
               <mat-card-title>{{ holding.name }}</mat-card-title>
-              <mat-card-subtitle>{{ categoryLabel(holding) }} · {{ holding.quantity | number:'1.0-4' }} units</mat-card-subtitle>
+              <mat-card-subtitle>{{ categoryLabel(holding) }}</mat-card-subtitle>
             </mat-card-header>
             <mat-card-content>
               <div class="holding-metrics">
@@ -62,15 +63,22 @@ import { InvestmentCategory, InvestmentHolding } from '../models/finance.models'
                 <span>Value <strong>{{ holding.currentValue || 0 | currency:'INR':'symbol':'1.0-0' }}</strong></span>
                 <span>Gain/loss <strong>{{ holding.gainLoss || 0 | currency:'INR':'symbol':'1.0-0' }}</strong></span>
               </div>
+              <div class="projection-header">
+                <strong>Maturity outlook</strong>
+                <small>{{ holding.tenureYears || 5 }} years remaining at {{ holding.expectedAnnualReturnPercent | number:'1.0-2' }}% expected annual growth</small>
+              </div>
+              <div class="maturity-total">
+                <span>Predicted amount at maturity</span>
+                <strong>{{ holding.projectedMaturityValue || holding.projectedValueFiveYears || 0 | currency:'INR':'symbol':'1.0-0' }}</strong>
+              </div>
               <div class="projection-row">
-                <span>1Y {{ holding.projectedValueOneYear || 0 | currency:'INR':'symbol':'1.0-0' }}</span>
-                <span>3Y {{ holding.projectedValueThreeYears || 0 | currency:'INR':'symbol':'1.0-0' }}</span>
-                <span>5Y {{ holding.projectedValueFiveYears || 0 | currency:'INR':'symbol':'1.0-0' }}</span>
+                <span><small>1 year</small><strong>{{ holding.projectedValueOneYear || 0 | currency:'INR':'symbol':'1.0-0' }}</strong></span>
+                <span><small>3 years</small><strong>{{ holding.projectedValueThreeYears || 0 | currency:'INR':'symbol':'1.0-0' }}</strong></span>
+                <span><small>5 years</small><strong>{{ holding.projectedValueFiveYears || 0 | currency:'INR':'symbol':'1.0-0' }}</strong></span>
               </div>
               <form [formGroup]="contributionForm" (ngSubmit)="addContribution(holding)" class="contribution-row">
-                <mat-form-field appearance="outline"><mat-label>Amount</mat-label><input matInput type="number" formControlName="amount" /></mat-form-field>
-                <mat-form-field appearance="outline"><mat-label>Quantity added</mat-label><input matInput type="number" formControlName="quantityAdded" /></mat-form-field>
-                <mat-form-field appearance="outline"><mat-label>Rate now</mat-label><input matInput type="number" formControlName="rateAtContribution" /></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Additional amount</mat-label><input matInput type="number" formControlName="amount" /></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Current total value</mat-label><input matInput type="number" formControlName="currentTotalValue" /></mat-form-field>
                 <button mat-stroked-button type="submit" [disabled]="contributionForm.invalid || store.saving()">Add contribution</button>
                 <button mat-button type="button" (click)="deleteHolding(holding)">Delete</button>
               </form>
@@ -96,8 +104,13 @@ import { InvestmentCategory, InvestmentHolding } from '../models/finance.models'
     .holding-card mat-card-content { display: grid; gap: 14px; padding-top: 16px; }
     .holding-metrics, .projection-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
     .holding-metrics span, .projection-row span { background: linear-gradient(145deg, rgba(255,255,255,0.72), rgba(241,237,224,0.7)); border-radius: 8px; padding: 12px; }
-    .holding-metrics strong { display: block; }
-    .contribution-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto auto; gap: 10px; align-items: start; }
+    .holding-metrics strong, .projection-row strong { display: block; }
+    .projection-header { align-items: end; display: flex; gap: 12px; justify-content: space-between; }
+    .projection-header strong { font-family: Newsreader, serif; font-size: 1.45rem; }
+    .projection-header small, .projection-row small, .maturity-total span { color: var(--fc-muted); display: block; }
+    .maturity-total { background: linear-gradient(135deg, rgba(47,93,124,0.12), rgba(216,189,124,0.18)); border: 1px solid rgba(47,93,124,0.16); border-radius: 8px; padding: 16px; }
+    .maturity-total strong { display: block; font-family: Newsreader, serif; font-size: 2rem; margin-top: 4px; }
+    .contribution-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto auto; gap: 10px; align-items: start; }
     .empty-state { padding: 18px; }
     @media (max-width: 900px) { .investment-layout, .form-grid, .holding-metrics, .projection-row, .contribution-row { grid-template-columns: 1fr; } }
   `
@@ -111,17 +124,16 @@ export class InvestmentsPage implements OnInit {
     name: ['', Validators.required],
     category: ['Gold' as InvestmentCategory, Validators.required],
     customCategory: [''],
-    quantity: [0, [Validators.required, Validators.min(0)]],
-    averageCost: [0, [Validators.required, Validators.min(0)]],
-    currentRate: [0, [Validators.required, Validators.min(0)]],
+    amountInvested: [0, [Validators.required, Validators.min(0)]],
+    currentValue: [0, [Validators.required, Validators.min(0)]],
     expectedAnnualReturnPercent: [0, [Validators.required, Validators.min(0)]],
+    tenureYears: [5, [Validators.required, Validators.min(1), Validators.max(50)]],
     notes: ['']
   });
 
   readonly contributionForm = this.builder.nonNullable.group({
     amount: [0, [Validators.required, Validators.min(1)]],
-    quantityAdded: [0, [Validators.required, Validators.min(0)]],
-    rateAtContribution: [0, [Validators.required, Validators.min(0)]],
+    currentTotalValue: [0, [Validators.required, Validators.min(0)]],
     description: ['Monthly contribution']
   });
 
@@ -137,8 +149,23 @@ export class InvestmentsPage implements OnInit {
       return;
     }
 
-    await this.store.saveInvestment({ userProfileId: profile.id, ...this.holdingForm.getRawValue() });
-    this.holdingForm.reset({ name: '', category: 'Gold', customCategory: '', quantity: 0, averageCost: 0, currentRate: 0, expectedAnnualReturnPercent: 0, notes: '' });
+    const value = this.holdingForm.getRawValue();
+    const amountInvested = Number(value.amountInvested || 0);
+    const currentValue = Number(value.currentValue || 0);
+
+    await this.store.saveInvestment({
+      userProfileId: profile.id,
+      name: value.name,
+      category: value.category,
+      customCategory: value.customCategory,
+      quantity: amountInvested,
+      averageCost: amountInvested > 0 ? 1 : 0,
+      currentRate: amountInvested > 0 ? currentValue / amountInvested : 0,
+      expectedAnnualReturnPercent: value.expectedAnnualReturnPercent,
+      tenureYears: value.tenureYears,
+      notes: value.notes
+    });
+    this.holdingForm.reset({ name: '', category: 'Gold', customCategory: '', amountInvested: 0, currentValue: 0, expectedAnnualReturnPercent: 0, tenureYears: 5, notes: '' });
     this.snackBar.open('Investment holding saved.', 'OK', { duration: 2500 });
   }
 
@@ -147,11 +174,17 @@ export class InvestmentsPage implements OnInit {
       return;
     }
 
+    const value = this.contributionForm.getRawValue();
+    const updatedAmount = Number(holding.investedAmount || 0) + Number(value.amount || 0);
+
     await this.store.addInvestmentContribution(holding.id, {
       contributionMonth: new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), 1)).toISOString(),
-      ...this.contributionForm.getRawValue()
+      amount: value.amount,
+      quantityAdded: value.amount,
+      rateAtContribution: updatedAmount > 0 && value.currentTotalValue > 0 ? value.currentTotalValue / updatedAmount : 0,
+      description: value.description
     });
-    this.contributionForm.reset({ amount: 0, quantityAdded: 0, rateAtContribution: 0, description: 'Monthly contribution' });
+    this.contributionForm.reset({ amount: 0, currentTotalValue: 0, description: 'Monthly contribution' });
     this.snackBar.open('Investment contribution added.', 'OK', { duration: 2500 });
   }
 
@@ -165,5 +198,14 @@ export class InvestmentsPage implements OnInit {
 
   categoryLabel(holding: InvestmentHolding): string {
     return holding.category === 'Custom' ? holding.customCategory : holding.category;
+  }
+
+  totalProjectedValue(years: 1 | 3 | 5): number {
+    const key = years === 1 ? 'projectedValueOneYear' : years === 3 ? 'projectedValueThreeYears' : 'projectedValueFiveYears';
+    return this.store.investments().holdings.reduce((total, holding) => total + Number(holding[key] || 0), 0);
+  }
+
+  totalMaturityValue(): number {
+    return this.store.investments().holdings.reduce((total, holding) => total + Number(holding.projectedMaturityValue || holding.projectedValueFiveYears || 0), 0);
   }
 }

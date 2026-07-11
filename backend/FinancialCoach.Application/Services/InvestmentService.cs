@@ -97,6 +97,7 @@ public sealed class InvestmentService(IInvestmentRepository repository) : IInves
         holding.AverageCost = request.AverageCost;
         holding.CurrentRate = request.CurrentRate;
         holding.ExpectedAnnualReturnPercent = request.ExpectedAnnualReturnPercent;
+        holding.TenureYears = request.TenureYears;
         holding.Notes = request.Notes.Trim();
     }
 
@@ -110,6 +111,7 @@ public sealed class InvestmentService(IInvestmentRepository repository) : IInves
         holding.AverageCost,
         holding.CurrentRate,
         holding.ExpectedAnnualReturnPercent,
+        holding.TenureYears,
         holding.Notes,
         holding.InvestedAmount,
         holding.CurrentValue,
@@ -118,6 +120,7 @@ public sealed class InvestmentService(IInvestmentRepository repository) : IInves
         Project(holding.CurrentValue, holding.ExpectedAnnualReturnPercent, 1),
         Project(holding.CurrentValue, holding.ExpectedAnnualReturnPercent, 3),
         Project(holding.CurrentValue, holding.ExpectedAnnualReturnPercent, 5),
+        Project(holding.CurrentValue, holding.ExpectedAnnualReturnPercent, holding.TenureYears),
         holding.Contributions.OrderByDescending(item => item.ContributionMonth).Select(ToContributionResponse).ToArray());
 
     private static InvestmentContributionResponse ToContributionResponse(InvestmentContribution contribution) => new(

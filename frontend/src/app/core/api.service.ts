@@ -57,11 +57,11 @@ export class ApiService {
     return this.http.get<InvestmentSummary>(`${this.baseUrl}/investments/${userProfileId}`);
   }
 
-  createInvestment(holding: Omit<InvestmentHolding, 'id' | 'investedAmount' | 'currentValue' | 'gainLoss' | 'gainLossPercent' | 'projectedValueOneYear' | 'projectedValueThreeYears' | 'projectedValueFiveYears' | 'contributions'>): Observable<InvestmentHolding> {
+  createInvestment(holding: Omit<InvestmentHolding, 'id' | 'investedAmount' | 'currentValue' | 'gainLoss' | 'gainLossPercent' | 'projectedValueOneYear' | 'projectedValueThreeYears' | 'projectedValueFiveYears' | 'projectedMaturityValue' | 'contributions'>): Observable<InvestmentHolding> {
     return this.http.post<InvestmentHolding>(`${this.baseUrl}/investments`, holding);
   }
 
-  updateInvestment(id: string, holding: Omit<InvestmentHolding, 'id' | 'investedAmount' | 'currentValue' | 'gainLoss' | 'gainLossPercent' | 'projectedValueOneYear' | 'projectedValueThreeYears' | 'projectedValueFiveYears' | 'contributions'>): Observable<InvestmentHolding> {
+  updateInvestment(id: string, holding: Omit<InvestmentHolding, 'id' | 'investedAmount' | 'currentValue' | 'gainLoss' | 'gainLossPercent' | 'projectedValueOneYear' | 'projectedValueThreeYears' | 'projectedValueFiveYears' | 'projectedMaturityValue' | 'contributions'>): Observable<InvestmentHolding> {
     return this.http.put<InvestmentHolding>(`${this.baseUrl}/investments/${id}`, holding);
   }
 

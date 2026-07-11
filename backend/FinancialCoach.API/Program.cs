@@ -54,6 +54,7 @@ if (bool.TryParse(app.Configuration["Database:AutoCreate"], out var autoCreateDa
     }
 
     await EnsureFeedbackEntriesTableAsync(dbContext);
+    await EnsureInvestmentTenureColumnAsync(dbContext);
 }
 
 // Configure the HTTP request pipeline.
@@ -118,4 +119,27 @@ static async Task EnsureFeedbackEntriesTableAsync(FinancialCoachDbContext dbCont
         CREATE INDEX IF NOT EXISTS "IX_FeedbackEntries_CreatedAtUtc" ON "FeedbackEntries" ("CreatedAtUtc");
         CREATE INDEX IF NOT EXISTS "IX_FeedbackEntries_UserProfileId" ON "FeedbackEntries" ("UserProfileId");
         """);
+}
+
+static async Task EnsureInvestmentTenureColumnAsync(FinancialCoachDbContext dbContext)
+{
+    var provider = dbContext.Database.ProviderName ?? string.Empty;
+
+    if (provider.Contains("Npgsql", StringComparison.OrdinalIgnoreCase))
+    {
+        await dbContext.Database.ExecuteSqlRawAsync("""
+            ALTER TABLE "InvestmentHoldings" ADD COLUMN IF NOT EXISTS "TenureYears" integer NOT NULL DEFAULT 5;
+            """);
+        return;
+    }
+
+    try
+    {
+        await dbContext.Database.ExecuteSqlRawAsync("""
+            ALTER TABLE "InvestmentHoldings" ADD COLUMN "TenureYears" INTEGER NOT NULL DEFAULT 5;
+            """);
+    }
+    catch (Exception exception) when (exception.Message.Contains("duplicate column", StringComparison.OrdinalIgnoreCase))
+    {
+    }
 }

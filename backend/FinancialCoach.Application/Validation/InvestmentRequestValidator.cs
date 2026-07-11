@@ -16,6 +16,7 @@ public sealed class InvestmentHoldingRequestValidator : AbstractValidator<Invest
         RuleFor(request => request.AverageCost).GreaterThanOrEqualTo(0);
         RuleFor(request => request.CurrentRate).GreaterThanOrEqualTo(0);
         RuleFor(request => request.ExpectedAnnualReturnPercent).InclusiveBetween(0, 100);
+        RuleFor(request => request.TenureYears).InclusiveBetween(1, 50);
         RuleFor(request => request.Notes).MaximumLength(400);
     }
 }

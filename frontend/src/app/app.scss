@@ -87,7 +87,29 @@
 main {
 	width: min(1180px, calc(100% - 32px));
 	margin: 0 auto;
-	padding: 30px 0 96px;
+	padding: 30px 0 48px;
+}
+
+.app-footer {
+	align-items: center;
+	display: flex;
+	gap: 14px;
+	justify-content: center;
+	width: min(1180px, calc(100% - 32px));
+	margin: 0 auto;
+	padding: 0 0 36px;
+	color: var(--fc-muted);
+	font-size: 0.94rem;
+
+	a {
+		border-color: rgba(47, 93, 124, 0.36);
+		color: #183247;
+		font-weight: 800;
+	}
+
+	.active-link {
+		background: linear-gradient(135deg, rgba(47, 93, 124, 0.12), rgba(216, 189, 124, 0.2));
+	}
 }
 
 @media (max-width: 720px) {
@@ -142,5 +164,17 @@ main {
 	main {
 		width: min(100% - 24px, 1180px);
 		padding-top: 22px;
+	}
+
+	.app-footer {
+		align-items: stretch;
+		flex-direction: column;
+		width: min(100% - 24px, 1180px);
+		padding-bottom: 28px;
+		text-align: center;
+
+		a {
+			min-height: 46px;
+		}
 	}
 }

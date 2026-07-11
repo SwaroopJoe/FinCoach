@@ -14,6 +14,7 @@ public sealed class InvestmentHolding : BaseEntity
     public decimal AverageCost { get; set; }
     public decimal CurrentRate { get; set; }
     public decimal ExpectedAnnualReturnPercent { get; set; }
+    public int TenureYears { get; set; } = 5;
     public string Notes { get; set; } = string.Empty;
     public List<InvestmentContribution> Contributions { get; set; } = [];
 
