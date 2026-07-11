@@ -3,6 +3,8 @@ using FinancialCoach.Infrastructure;
 using FinancialCoach.Infrastructure.Persistence;
 using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,6 +42,16 @@ if (bool.TryParse(app.Configuration["Database:AutoCreate"], out var autoCreateDa
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<FinancialCoachDbContext>();
     await dbContext.Database.EnsureCreatedAsync();
+
+    try
+    {
+        await dbContext.AppUsers.AnyAsync();
+    }
+    catch (Exception exception) when (exception is DbUpdateException or InvalidOperationException or Npgsql.PostgresException)
+    {
+        var databaseCreator = dbContext.Database.GetService<IRelationalDatabaseCreator>();
+        await databaseCreator.CreateTablesAsync();
+    }
 }
 
 // Configure the HTTP request pipeline.
