@@ -18,6 +18,10 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
     ?? ["http://localhost:4200", "http://localhost:8100", "https://localhost"];
+allowedOrigins = allowedOrigins
+    .Concat(["http://localhost:4200", "http://localhost:8100", "https://localhost"])
+    .Distinct(StringComparer.OrdinalIgnoreCase)
+    .ToArray();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("LocalFrontend", policy => policy

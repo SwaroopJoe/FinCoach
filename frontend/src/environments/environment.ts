@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  apiBaseUrl: 'https://localhost:7039/api'
+  apiBaseUrl: 'https://fincoach-9lsq.onrender.com/api'
 };
