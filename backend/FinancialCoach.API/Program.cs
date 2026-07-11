@@ -52,6 +52,8 @@ if (bool.TryParse(app.Configuration["Database:AutoCreate"], out var autoCreateDa
         var databaseCreator = dbContext.Database.GetService<IRelationalDatabaseCreator>();
         await databaseCreator.CreateTablesAsync();
     }
+
+    await EnsureFeedbackEntriesTableAsync(dbContext);
 }
 
 // Configure the HTTP request pipeline.
@@ -71,3 +73,49 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 app.MapControllers();
 
 app.Run();
+
+static async Task EnsureFeedbackEntriesTableAsync(FinancialCoachDbContext dbContext)
+{
+    var provider = dbContext.Database.ProviderName ?? string.Empty;
+
+    if (provider.Contains("Npgsql", StringComparison.OrdinalIgnoreCase))
+    {
+        await dbContext.Database.ExecuteSqlRawAsync("""
+            CREATE TABLE IF NOT EXISTS "FeedbackEntries" (
+                "Id" uuid NOT NULL,
+                "UserProfileId" uuid NULL,
+                "Type" integer NOT NULL,
+                "Title" character varying(140) NOT NULL,
+                "Description" character varying(2000) NOT NULL,
+                "ContactEmail" character varying(180) NOT NULL,
+                "Status" character varying(40) NOT NULL,
+                "CreatedAtUtc" timestamp with time zone NOT NULL,
+                "UpdatedAtUtc" timestamp with time zone NULL,
+                "SyncVersion" bigint NOT NULL,
+                CONSTRAINT "PK_FeedbackEntries" PRIMARY KEY ("Id"),
+                CONSTRAINT "FK_FeedbackEntries_UserProfiles_UserProfileId" FOREIGN KEY ("UserProfileId") REFERENCES "UserProfiles" ("Id") ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS "IX_FeedbackEntries_CreatedAtUtc" ON "FeedbackEntries" ("CreatedAtUtc");
+            CREATE INDEX IF NOT EXISTS "IX_FeedbackEntries_UserProfileId" ON "FeedbackEntries" ("UserProfileId");
+            """);
+        return;
+    }
+
+    await dbContext.Database.ExecuteSqlRawAsync("""
+        CREATE TABLE IF NOT EXISTS "FeedbackEntries" (
+            "Id" TEXT NOT NULL CONSTRAINT "PK_FeedbackEntries" PRIMARY KEY,
+            "UserProfileId" TEXT NULL,
+            "Type" INTEGER NOT NULL,
+            "Title" TEXT NOT NULL,
+            "Description" TEXT NOT NULL,
+            "ContactEmail" TEXT NOT NULL,
+            "Status" TEXT NOT NULL,
+            "CreatedAtUtc" TEXT NOT NULL,
+            "UpdatedAtUtc" TEXT NULL,
+            "SyncVersion" INTEGER NOT NULL,
+            CONSTRAINT "FK_FeedbackEntries_UserProfiles_UserProfileId" FOREIGN KEY ("UserProfileId") REFERENCES "UserProfiles" ("Id") ON DELETE SET NULL
+        );
+        CREATE INDEX IF NOT EXISTS "IX_FeedbackEntries_CreatedAtUtc" ON "FeedbackEntries" ("CreatedAtUtc");
+        CREATE INDEX IF NOT EXISTS "IX_FeedbackEntries_UserProfileId" ON "FeedbackEntries" ("UserProfileId");
+        """);
+}

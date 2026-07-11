@@ -1,6 +1,6 @@
 import { CurrencyPipe, DecimalPipe, NgClass } from '@angular/common';
 import { Component, OnInit, computed, inject } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -33,12 +33,6 @@ import { FinancialStoreService } from '../core/financial-store.service';
       <section class="panel empty-state">
         <strong>Create your profile before the dashboard can calculate anything.</strong>
         <a mat-flat-button routerLink="/profile">Create profile</a>
-      </section>
-    } @else if (!hasSavedPlan()) {
-      <section class="panel empty-state">
-        <strong>No saved plan for {{ store.selectedPlanMonthLabel() }} yet.</strong>
-        <button mat-flat-button type="button" (click)="startFromPreviousMonth()">Start from previous month</button>
-        <a mat-stroked-button routerLink="/monthly-planning">Create blank plan</a>
       </section>
     } @else {
       <section class="hero panel">
@@ -186,10 +180,8 @@ import { FinancialStoreService } from '../core/financial-store.service';
 })
 export class DashboardPage implements OnInit {
   readonly store = inject(FinancialStoreService);
-  private readonly router = inject(Router);
   readonly summary = this.store.dashboard;
   readonly plan = this.store.monthlyPlan;
-  readonly hasSavedPlan = computed(() => Boolean(this.store.profile() && this.plan().id));
 
   readonly metrics = computed(() => [
     { label: 'Monthly income', value: this.summary().monthlyIncome, note: 'Planned income this month' },
@@ -283,10 +275,5 @@ export class DashboardPage implements OnInit {
 
   async changeMonth(offset: number): Promise<void> {
     await this.store.changeSelectedMonth(offset);
-  }
-
-  async startFromPreviousMonth(): Promise<void> {
-    await this.store.startSelectedMonthFromPreviousPlan();
-    await this.router.navigateByUrl('/monthly-planning');
   }
 }

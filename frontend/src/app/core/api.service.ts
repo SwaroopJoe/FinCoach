@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { DashboardSummary, FinancialGoal, GoalContribution, InvestmentContribution, InvestmentHolding, InvestmentSummary, MonthlyPlan, UserProfile } from '../models/finance.models';
+import { DashboardSummary, FeedbackEntry, FinancialGoal, GoalContribution, InvestmentContribution, InvestmentHolding, InvestmentSummary, MonthlyPlan, UserProfile } from '../models/finance.models';
 import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -91,6 +91,14 @@ export class ApiService {
 
   addGoalContribution(goalId: string, contribution: Omit<GoalContribution, 'id' | 'financialGoalId'>): Observable<GoalContribution> {
     return this.http.post<GoalContribution>(`${this.baseUrl}/goals/${goalId}/contributions`, contribution);
+  }
+
+  getFeedbackEntries(): Observable<FeedbackEntry[]> {
+    return this.http.get<FeedbackEntry[]>(`${this.baseUrl}/feedback`);
+  }
+
+  createFeedbackEntry(entry: Omit<FeedbackEntry, 'id' | 'status' | 'createdAtUtc'>): Observable<FeedbackEntry> {
+    return this.http.post<FeedbackEntry>(`${this.baseUrl}/feedback`, entry);
   }
 }
 

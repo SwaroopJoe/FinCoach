@@ -30,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<IMonthlyPlanRepository, MonthlyPlanRepository>();
         services.AddScoped<IInvestmentRepository, InvestmentRepository>();
         services.AddScoped<IGoalRepository, GoalRepository>();
+        services.AddScoped<IFeedbackEntryRepository, FeedbackEntryRepository>();
 
         return services;
     }

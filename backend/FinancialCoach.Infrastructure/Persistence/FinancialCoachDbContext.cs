@@ -19,6 +19,7 @@ public sealed class FinancialCoachDbContext(DbContextOptions<FinancialCoachDbCon
     public DbSet<InvestmentContribution> InvestmentContributions => Set<InvestmentContribution>();
     public DbSet<FinancialGoal> FinancialGoals => Set<FinancialGoal>();
     public DbSet<GoalContribution> GoalContributions => Set<GoalContribution>();
+    public DbSet<FeedbackEntry> FeedbackEntries => Set<FeedbackEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -135,6 +136,16 @@ public sealed class FinancialCoachDbContext(DbContextOptions<FinancialCoachDbCon
             entity.Property(item => item.Amount).HasPrecision(18, 2);
             entity.Property(item => item.Description).HasMaxLength(160);
             entity.HasOne(item => item.FinancialGoal).WithMany(goal => goal.Contributions).HasForeignKey(item => item.FinancialGoalId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<FeedbackEntry>(entity =>
+        {
+            entity.HasIndex(item => item.CreatedAtUtc);
+            entity.Property(item => item.Title).HasMaxLength(140).IsRequired();
+            entity.Property(item => item.Description).HasMaxLength(2000).IsRequired();
+            entity.Property(item => item.ContactEmail).HasMaxLength(180);
+            entity.Property(item => item.Status).HasMaxLength(40).IsRequired();
+            entity.HasOne(item => item.UserProfile).WithMany().HasForeignKey(item => item.UserProfileId).OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

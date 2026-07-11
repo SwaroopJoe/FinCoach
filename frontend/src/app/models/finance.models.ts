@@ -66,6 +66,7 @@ export interface DashboardSummary {
 export type InvestmentCategory = 'Gold' | 'MutualFundSip' | 'Stock' | 'FixedDepositPpf' | 'Custom';
 export type GoalCategory = 'ShortTerm' | 'EmergencyFund' | 'Travel' | 'Home' | 'Education' | 'Retirement' | 'Custom';
 export type GoalPriority = 'Low' | 'Medium' | 'High';
+export type FeedbackEntryType = 'Contribute' | 'Report';
 
 export interface InvestmentContribution {
   id?: string;
@@ -131,4 +132,15 @@ export interface FinancialGoal {
   isCompleted?: boolean;
   notes: string;
   contributions?: GoalContribution[];
+}
+
+export interface FeedbackEntry {
+  id: string;
+  userProfileId?: string | null;
+  type: FeedbackEntryType;
+  title: string;
+  description: string;
+  contactEmail: string;
+  status: string;
+  createdAtUtc: string;
 }

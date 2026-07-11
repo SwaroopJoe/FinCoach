@@ -31,6 +31,11 @@ export const routes: Routes = [
 		canActivate: [authGuard],
 		loadComponent: () => import('./goals/goals.page').then((page) => page.GoalsPage)
 	},
+	{
+		path: 'feedback',
+		canActivate: [authGuard],
+		loadComponent: () => import('./feedback/feedback.page').then((page) => page.FeedbackPage)
+	},
 	{ path: '', pathMatch: 'full', redirectTo: 'auth' },
 	{ path: '**', redirectTo: 'auth' }
 ];

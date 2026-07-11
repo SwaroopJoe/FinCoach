@@ -46,3 +46,9 @@ public interface IGoalService
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken);
     Task<GoalContributionResponse?> AddContributionAsync(Guid goalId, GoalContributionRequest request, CancellationToken cancellationToken);
 }
+
+public interface IFeedbackService
+{
+    Task<IReadOnlyCollection<FeedbackEntryResponse>> GetRecentAsync(CancellationToken cancellationToken);
+    Task<FeedbackEntryResponse> CreateAsync(FeedbackEntryRequest request, CancellationToken cancellationToken);
+}
