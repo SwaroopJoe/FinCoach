@@ -1,0 +1,28 @@
+<ion-app>
+  <div class="app-shell">
+    <mat-toolbar class="topbar">
+      <a class="brand" routerLink="/dashboard" aria-label="Financial Coach home">
+        <span class="brand-mark">FC</span>
+        <span>
+          <strong>Financial Coach</strong>
+          <small>Plan. Adapt. Know where you're headed.</small>
+        </span>
+      </a>
+
+      @if (isAuthenticated()) {
+        <nav class="nav-links" aria-label="Primary navigation">
+          <a mat-button routerLink="/dashboard" routerLinkActive="active-link">Dashboard</a>
+          <a mat-button routerLink="/monthly-planning" routerLinkActive="active-link">Monthly Plan</a>
+          <a mat-button routerLink="/investments" routerLinkActive="active-link">Investments</a>
+          <a mat-button routerLink="/goals" routerLinkActive="active-link">Goals</a>
+          <a mat-button routerLink="/profile" routerLinkActive="active-link">Profile</a>
+          <button mat-button type="button" class="logout-button" (click)="logout()">Logout</button>
+        </nav>
+      }
+    </mat-toolbar>
+
+    <main>
+      <router-outlet />
+    </main>
+  </div>
+</ion-app>

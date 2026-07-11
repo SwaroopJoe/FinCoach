@@ -1,0 +1,125 @@
+@use '@angular/material' as mat;
+@import '@ionic/angular/css/core.css';
+@import '@ionic/angular/css/normalize.css';
+@import '@ionic/angular/css/structure.css';
+@import '@ionic/angular/css/typography.css';
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Newsreader:opsz,wght@6..72,600;6..72,700&display=swap');
+
+:root {
+	--fc-ink: #15202b;
+	--fc-muted: #64717f;
+	--fc-panel: rgba(252, 250, 246, 0.92);
+	--fc-panel-strong: #f8f5ee;
+	--fc-border: rgba(41, 61, 82, 0.14);
+	--fc-primary: #2f5d7c;
+	--fc-primary-deep: #183247;
+	--fc-accent: #b98f3f;
+	--fc-sun: #d8bd7c;
+	--fc-coral: #6f8597;
+	--fc-shadow: 0 24px 70px rgba(29, 43, 58, 0.13);
+}
+
+html {
+	color-scheme: light;
+	@include mat.theme((
+		color: mat.$spring-green-palette,
+		typography: Manrope,
+		density: 0
+	));
+}
+
+body {
+	margin: 0;
+	font-family: Manrope, sans-serif;
+	background: #f6f1e7;
+	color: var(--fc-ink);
+}
+
+* {
+	box-sizing: border-box;
+}
+
+.page-header {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 22px;
+	padding: 8px 0 4px;
+
+	h1 {
+		margin: 0;
+		font-family: Newsreader, serif;
+		font-size: clamp(2rem, 4vw, 3.25rem);
+		font-weight: 700;
+		line-height: 1;
+		letter-spacing: 0;
+		color: #15202b;
+	}
+
+	p {
+		max-width: 640px;
+		margin: 8px 0 0;
+		color: var(--fc-muted);
+		font-size: 0.98rem;
+	}
+}
+
+.panel {
+	position: relative;
+	border: 1px solid var(--fc-border);
+	border-radius: 8px;
+	background:
+		linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(240, 245, 247, 0.78)),
+		var(--fc-panel);
+	box-shadow: var(--fc-shadow);
+	overflow: hidden;
+}
+
+.panel::before {
+	content: '';
+	position: absolute;
+	inset: 0 0 auto;
+	height: 3px;
+	background: linear-gradient(90deg, var(--fc-coral), var(--fc-accent), var(--fc-sun));
+	opacity: 0.75;
+}
+
+.mat-mdc-button-base {
+	border-radius: 999px !important;
+	font-weight: 800 !important;
+}
+
+.mat-mdc-unelevated-button.mat-primary,
+.mat-mdc-fab.mat-primary,
+.mat-mdc-mini-fab.mat-primary {
+	box-shadow: 0 12px 28px rgba(47, 93, 124, 0.22) !important;
+}
+
+.mat-mdc-form-field {
+	--mdc-outlined-text-field-container-shape: 8px;
+	--mdc-outlined-text-field-outline-color: rgba(41, 61, 82, 0.28);
+	--mdc-outlined-text-field-hover-outline-color: var(--fc-coral);
+	--mdc-outlined-text-field-focus-outline-color: var(--fc-primary);
+}
+
+.mat-mdc-card-title {
+	font-weight: 800 !important;
+}
+
+.mat-mdc-card-subtitle {
+	color: var(--fc-muted) !important;
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 16px;
+}
+
+@media (max-width: 720px) {
+	.page-header {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+}
