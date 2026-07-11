@@ -13,7 +13,7 @@ public sealed class DashboardService(IMonthlyPlanRepository monthlyPlanRepositor
 
     public async Task<DashboardSummaryResponse> GetSummaryAsync(Guid userProfileId, DateTime planMonth, CancellationToken cancellationToken)
     {
-        var normalizedMonth = new DateTime(planMonth.Year, planMonth.Month, 1);
+        var normalizedMonth = new DateTime(planMonth.Year, planMonth.Month, 1, 0, 0, 0, DateTimeKind.Utc);
         var plan = await monthlyPlanRepository.GetByMonthAsync(userProfileId, normalizedMonth, cancellationToken);
         return ToSummary(plan);
     }

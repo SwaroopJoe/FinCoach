@@ -8,7 +8,7 @@ public sealed class MonthlyPlanningService(IMonthlyPlanRepository repository) : 
 {
     public async Task<MonthlyPlanResponse?> GetCurrentAsync(Guid userProfileId, CancellationToken cancellationToken)
     {
-        var currentMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+        var currentMonth = NormalizeMonth(DateTime.UtcNow);
         var plan = await repository.GetByMonthAsync(userProfileId, currentMonth, cancellationToken);
         plan ??= await repository.GetLatestAsync(userProfileId, cancellationToken);
         return plan?.ToResponse();
@@ -16,14 +16,14 @@ public sealed class MonthlyPlanningService(IMonthlyPlanRepository repository) : 
 
     public async Task<MonthlyPlanResponse?> GetByMonthAsync(Guid userProfileId, DateTime planMonth, CancellationToken cancellationToken)
     {
-        var normalizedMonth = new DateTime(planMonth.Year, planMonth.Month, 1);
+        var normalizedMonth = NormalizeMonth(planMonth);
         var plan = await repository.GetByMonthAsync(userProfileId, normalizedMonth, cancellationToken);
         return plan?.ToResponse();
     }
 
     public async Task<MonthlyPlanResponse> UpsertAsync(MonthlyPlanRequest request, CancellationToken cancellationToken)
     {
-        var planMonth = new DateTime(request.PlanMonth.Year, request.PlanMonth.Month, 1);
+        var planMonth = NormalizeMonth(request.PlanMonth);
         var existing = await repository.GetByMonthAsync(request.UserProfileId, planMonth, cancellationToken);
         var plan = existing ?? new MonthlyPlan { UserProfileId = request.UserProfileId, PlanMonth = planMonth };
 
@@ -62,7 +62,7 @@ public sealed class MonthlyPlanningService(IMonthlyPlanRepository repository) : 
 
     public async Task<bool> ResetCurrentAsync(Guid userProfileId, CancellationToken cancellationToken)
     {
-        var currentMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+        var currentMonth = NormalizeMonth(DateTime.UtcNow);
         var plan = await repository.GetByMonthAsync(userProfileId, currentMonth, cancellationToken)
             ?? await repository.GetLatestAsync(userProfileId, cancellationToken);
 
@@ -77,7 +77,7 @@ public sealed class MonthlyPlanningService(IMonthlyPlanRepository repository) : 
 
     public async Task<bool> ResetByMonthAsync(Guid userProfileId, DateTime planMonth, CancellationToken cancellationToken)
     {
-        var normalizedMonth = new DateTime(planMonth.Year, planMonth.Month, 1);
+        var normalizedMonth = NormalizeMonth(planMonth);
         var plan = await repository.GetByMonthAsync(userProfileId, normalizedMonth, cancellationToken);
 
         if (plan is null)
@@ -88,4 +88,6 @@ public sealed class MonthlyPlanningService(IMonthlyPlanRepository repository) : 
         await repository.DeleteAsync(plan, cancellationToken);
         return true;
     }
+
+    private static DateTime NormalizeMonth(DateTime value) => new(value.Year, value.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 }

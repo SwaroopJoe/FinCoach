@@ -55,7 +55,7 @@ public sealed class InvestmentService(IInvestmentRepository repository) : IInves
             return null;
         }
 
-        var contributionMonth = new DateTime(request.ContributionMonth.Year, request.ContributionMonth.Month, 1);
+        var contributionMonth = new DateTime(request.ContributionMonth.Year, request.ContributionMonth.Month, 1, 0, 0, 0, DateTimeKind.Utc);
         var contribution = new InvestmentContribution
         {
             UserProfileId = request.UserProfileId,

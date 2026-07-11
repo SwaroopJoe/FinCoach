@@ -12,7 +12,7 @@ public sealed class MonthlyPlanRepository(FinancialCoachDbContext dbContext) : I
 
     public Task<MonthlyPlan?> GetByMonthAsync(Guid userProfileId, DateTime planMonth, CancellationToken cancellationToken)
     {
-        var normalizedMonth = new DateTime(planMonth.Year, planMonth.Month, 1);
+        var normalizedMonth = new DateTime(planMonth.Year, planMonth.Month, 1, 0, 0, 0, DateTimeKind.Utc);
         return IncludePlan(dbContext.MonthlyPlans).FirstOrDefaultAsync(plan => plan.UserProfileId == userProfileId && plan.PlanMonth == normalizedMonth, cancellationToken);
     }
 
