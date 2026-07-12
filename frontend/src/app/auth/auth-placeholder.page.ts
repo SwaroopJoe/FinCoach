@@ -67,7 +67,7 @@ export class AuthPlaceholderPage {
 
     this.saving.set(true);
     this.api.register(username).subscribe({
-      next: (response) => this.completeAuth(response),
+      next: (response) => this.completeAuth(response, '/profile'),
       error: (error: HttpErrorResponse) => this.handleAuthError(error, 'Could not create username.'),
       complete: () => {
         this.saving.set(false);
@@ -84,7 +84,7 @@ export class AuthPlaceholderPage {
 
     this.saving.set(true);
     this.api.login(username).subscribe({
-      next: (response) => this.completeAuth(response),
+      next: (response) => this.completeAuth(response, '/dashboard'),
       error: (error: HttpErrorResponse) => this.handleAuthError(error, 'Username not found. Create it first.'),
       complete: () => {
         this.saving.set(false);
@@ -110,13 +110,13 @@ export class AuthPlaceholderPage {
     return username;
   }
 
-  private completeAuth(response: AuthResponse): void {
+  private completeAuth(response: AuthResponse, targetUrl: string): void {
     this.store.resetForAuthChange();
     localStorage.setItem('financialCoachToken', response.accessToken);
     localStorage.setItem('financialCoachUserId', response.userId);
     localStorage.setItem('financialCoachUsername', response.username);
     localStorage.setItem('financialCoachDisplayName', response.username);
-    void this.router.navigateByUrl('/dashboard');
+    void this.router.navigateByUrl(targetUrl);
   }
 
   private handleAuthError(error: HttpErrorResponse, fallbackMessage: string): void {

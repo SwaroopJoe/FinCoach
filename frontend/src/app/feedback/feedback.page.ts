@@ -6,6 +6,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../core/api.service';
 import { FinancialStoreService } from '../core/financial-store.service';
@@ -102,6 +103,7 @@ import { FeedbackEntry, FeedbackEntryType } from '../models/finance.models';
 export class FeedbackPage implements OnInit {
   private readonly api = inject(ApiService);
   private readonly builder = inject(FormBuilder);
+  private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
   private readonly store = inject(FinancialStoreService);
 
@@ -136,6 +138,7 @@ export class FeedbackPage implements OnInit {
       this.entries = [saved, ...this.entries];
       this.feedbackForm.reset({ type: 'Contribute', title: '', description: '', contactEmail: '' });
       this.snackBar.open('Entry created.', 'OK', { duration: 2500 });
+      void this.router.navigateByUrl('/dashboard');
     } finally {
       this.saving = false;
     }

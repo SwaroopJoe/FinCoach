@@ -298,15 +298,15 @@ export class MonthlyPlanningPage {
   }
 
   addMoneyLine(array: FormArray, required = false): void {
-    array.push(required ? this.moneyLine('', 0) : this.optionalMoneyLine('', 0));
+    array.insert(0, required ? this.moneyLine('', 0) : this.optionalMoneyLine('', 0));
   }
 
   addVariableLine(): void {
-    this.variables.push(this.optionalVariableLine('', 0, 0));
+    this.variables.insert(0, this.optionalVariableLine('', 0, 0));
   }
 
   addBorrowingLine(): void {
-    this.borrowing.push(this.optionalBorrowingLine('', 0, ''));
+    this.borrowing.insert(0, this.optionalBorrowingLine('', 0, ''));
   }
 
   removeLine(array: FormArray, index: number): void {
@@ -368,8 +368,8 @@ export class MonthlyPlanningPage {
       return;
     }
 
-    this.variables.push(this.optionalVariableLine('', amount, 0));
-    this.variables.at(this.variables.length - 1)?.markAsTouched();
+    this.variables.insert(0, this.optionalVariableLine('', amount, 0));
+    this.variables.at(0)?.markAsTouched();
   }
 
   async save(): Promise<void> {
@@ -506,7 +506,7 @@ export class MonthlyPlanningPage {
     const target = reusableRow ? this.asGroup(reusableRow) : this.optionalMoneyLine('', 0);
 
     if (!reusableRow) {
-      this.investments.push(target);
+      this.investments.insert(0, target);
     }
 
     target.patchValue({ name, amount });
@@ -582,7 +582,7 @@ export class MonthlyPlanningPage {
     const target = existing ?? this.optionalBorrowingLine('', 0, '');
 
     if (!existing) {
-      this.borrowing.push(target);
+      this.borrowing.insert(0, target);
     }
 
     target.patchValue({

@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
 import { FinancialStoreService } from '../core/financial-store.service';
 import { CurrencyCode } from '../models/finance.models';
 
@@ -54,6 +55,7 @@ import { CurrencyCode } from '../models/finance.models';
 export class ProfileSetupPage implements OnInit {
   readonly store = inject(FinancialStoreService);
   private readonly builder = inject(FormBuilder);
+  private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
   readonly currencies: CurrencyCode[] = ['INR', 'USD', 'EUR', 'GBP', 'AED'];
 
@@ -98,5 +100,6 @@ export class ProfileSetupPage implements OnInit {
 
     this.form.markAsPristine();
     this.snackBar.open('Profile saved to SQLite.', 'OK', { duration: 3000 });
+    void this.router.navigateByUrl('/dashboard');
   }
 }
