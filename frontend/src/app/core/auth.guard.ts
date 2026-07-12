@@ -11,3 +11,14 @@ export const authGuard: CanActivateFn = () => {
 
   return router.createUrlTree(['/auth']);
 };
+
+export const signedOutGuard: CanActivateFn = () => {
+  const router = inject(Router);
+  const token = localStorage.getItem('financialCoachToken');
+
+  if (!token) {
+    return true;
+  }
+
+  return router.createUrlTree(['/dashboard']);
+};

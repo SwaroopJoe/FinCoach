@@ -1,9 +1,10 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/auth.guard';
+import { authGuard, signedOutGuard } from './core/auth.guard';
 
 export const routes: Routes = [
 	{
 		path: 'auth',
+		canActivate: [signedOutGuard],
 		loadComponent: () => import('./auth/auth-placeholder.page').then((page) => page.AuthPlaceholderPage)
 	},
 	{

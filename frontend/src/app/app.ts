@@ -18,7 +18,7 @@ export class App {
   ) {}
 
   isAuthenticated(): boolean {
-    return Boolean(localStorage.getItem('financialCoachToken'));
+    return Boolean(localStorage.getItem('financialCoachToken')) && !this.router.url.startsWith('/auth');
   }
 
   logout(): void {
