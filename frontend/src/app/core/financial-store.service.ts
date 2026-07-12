@@ -174,7 +174,7 @@ export class FinancialStoreService {
     }
 
     try {
-      const previous = await firstValueFrom(this.api.getCurrentMonthlyPlan(profile.id));
+      const previous = await this.loadPreviousMonthlyPlanForSelectedMonth();
       if (!previous) {
         const draft = this.createMonthlyPlanDraft(profile, this.selectedPlanMonth());
         this.monthlyPlan.set(draft);
@@ -210,6 +210,28 @@ export class FinancialStoreService {
       }
 
       this.error.set('Could not start this month from the previous plan.');
+      throw error;
+    }
+  }
+
+  async loadPreviousMonthlyPlanForSelectedMonth(): Promise<MonthlyPlan | null> {
+    const profile = this.profile() ?? await this.loadProfile();
+
+    if (!profile) {
+      return null;
+    }
+
+    const { year, month } = this.previousSelectedMonthParts();
+
+    try {
+      const response = await firstValueFrom(this.api.getMonthlyPlanForMonth(profile.id, year, month));
+      return response ? this.calculatePlan(response) : null;
+    } catch (error) {
+      if (this.isNotFound(error)) {
+        return null;
+      }
+
+      this.error.set('Could not load the previous monthly plan.');
       throw error;
     }
   }
@@ -546,5 +568,11 @@ export class FinancialStoreService {
   private selectedMonthParts(): { year: number; month: number } {
     const selected = new Date(this.selectedPlanMonth());
     return { year: selected.getUTCFullYear(), month: selected.getUTCMonth() + 1 };
+  }
+
+  private previousSelectedMonthParts(): { year: number; month: number } {
+    const selected = new Date(this.selectedPlanMonth());
+    const previous = new Date(Date.UTC(selected.getUTCFullYear(), selected.getUTCMonth() - 1, 1));
+    return { year: previous.getUTCFullYear(), month: previous.getUTCMonth() + 1 };
   }
 }

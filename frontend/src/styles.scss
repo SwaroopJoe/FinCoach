@@ -8,6 +8,7 @@
 :root {
 	--fc-ink: #15202b;
 	--fc-muted: #64717f;
+	--fc-page: #f6f1e7;
 	--fc-panel: rgba(252, 250, 246, 0.92);
 	--fc-panel-strong: #f8f5ee;
 	--fc-border: rgba(41, 61, 82, 0.14);
@@ -16,7 +17,11 @@
 	--fc-accent: #b98f3f;
 	--fc-sun: #d8bd7c;
 	--fc-coral: #6f8597;
+	--fc-danger: #8b2f24;
+	--fc-danger-soft: rgba(155, 63, 47, 0.24);
+	--fc-sticky: rgba(248, 248, 242, 0.92);
 	--fc-shadow: 0 24px 70px rgba(29, 43, 58, 0.13);
+	--fc-card-soft: rgba(255, 255, 255, 0.48);
 }
 
 html {
@@ -31,8 +36,37 @@ html {
 body {
 	margin: 0;
 	font-family: Manrope, sans-serif;
-	background: #f6f1e7;
+	background: var(--fc-page);
 	color: var(--fc-ink);
+}
+
+body.fc-dark-theme {
+	color-scheme: dark;
+	--mat-sys-background: #101820;
+	--mat-sys-error: #ffb4ab;
+	--mat-sys-on-background: #f3f0e9;
+	--mat-sys-on-primary: #0f1c25;
+	--mat-sys-on-surface: #f3f0e9;
+	--mat-sys-primary: #8ab3cf;
+	--mat-sys-surface: #182431;
+	--mat-sys-surface-container: #1f2d3a;
+	--mat-sys-surface-container-high: #263645;
+	--fc-ink: #f3f0e9;
+	--fc-muted: #bac7d2;
+	--fc-page: #101820;
+	--fc-panel: rgba(25, 36, 47, 0.94);
+	--fc-panel-strong: #182431;
+	--fc-border: rgba(222, 232, 238, 0.16);
+	--fc-primary: #8ab3cf;
+	--fc-primary-deep: #dbeaf2;
+	--fc-accent: #d6ad5b;
+	--fc-sun: #e0c77f;
+	--fc-coral: #9cb3c4;
+	--fc-danger: #ffb4a8;
+	--fc-danger-soft: rgba(255, 180, 168, 0.36);
+	--fc-sticky: rgba(24, 36, 49, 0.96);
+	--fc-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+	--fc-card-soft: rgba(255, 255, 255, 0.08);
 }
 
 * {
@@ -54,7 +88,7 @@ body {
 		font-weight: 700;
 		line-height: 1;
 		letter-spacing: 0;
-		color: #15202b;
+		color: var(--fc-ink);
 	}
 
 	p {
@@ -70,7 +104,7 @@ body {
 	border: 1px solid var(--fc-border);
 	border-radius: 8px;
 	background:
-		linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(240, 245, 247, 0.78)),
+		linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(240, 245, 247, 0.06)),
 		var(--fc-panel);
 	box-shadow: var(--fc-shadow);
 	overflow: hidden;
@@ -116,6 +150,37 @@ body {
 	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 	gap: 16px;
 }
+
+.allocation-bars {
+	display: grid;
+	gap: 6px;
+}
+
+.allocation-bars label {
+	align-items: center;
+	display: grid;
+	grid-template-columns: 120px minmax(0, 1fr);
+	gap: 10px;
+}
+
+.allocation-bars i {
+	background: rgba(100, 113, 127, 0.16);
+	border-radius: 999px;
+	display: block;
+	height: 8px;
+	overflow: hidden;
+}
+
+.allocation-bars b {
+	border-radius: inherit;
+	display: block;
+	height: 100%;
+	min-width: 6px;
+}
+
+.bar-expense { background: #9b3f2f; }
+.bar-investment { background: var(--fc-primary); }
+.bar-buffer, .bar-remaining { background: var(--fc-accent); }
 
 @media (max-width: 720px) {
 	.page-header {

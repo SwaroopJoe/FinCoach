@@ -6,7 +6,7 @@
 		linear-gradient(115deg, rgba(47, 93, 124, 0.07) 0 1px, transparent 1px 72px),
 		radial-gradient(circle at 12% 10%, rgba(184, 202, 213, 0.34), transparent 30rem),
 		radial-gradient(circle at 84% 18%, rgba(216, 189, 124, 0.22), transparent 26rem),
-		linear-gradient(135deg, #f5f0e6 0%, #fbfaf6 48%, #eaf1f4 100%);
+		linear-gradient(135deg, var(--fc-page) 0%, var(--fc-panel-strong) 48%, rgba(47, 93, 124, 0.14) 100%);
 	color: var(--fc-ink);
 }
 
@@ -20,7 +20,7 @@
 	min-height: 78px;
 	padding: 0 clamp(16px, 4vw, 48px);
 	border-bottom: 1px solid rgba(41, 61, 82, 0.13);
-	background: rgba(252, 250, 246, 0.84);
+	background: var(--fc-panel);
 	box-shadow: 0 14px 40px rgba(29, 43, 58, 0.08);
 	backdrop-filter: blur(22px) saturate(1.25);
 }
@@ -66,7 +66,7 @@
 	padding: 6px;
 	border: 1px solid rgba(41, 61, 82, 0.12);
 	border-radius: 999px;
-	background: rgba(255, 255, 255, 0.42);
+		background: var(--fc-card-soft);
 	white-space: nowrap;
 
 	a,
@@ -76,11 +76,11 @@
 
 	.active-link {
 		background: linear-gradient(135deg, rgba(47, 93, 124, 0.14), rgba(216, 189, 124, 0.22));
-		color: #183247;
+		color: var(--fc-primary-deep);
 	}
 
 	.logout-button {
-		color: #5d2f2b;
+		color: var(--fc-danger);
 	}
 }
 
@@ -103,7 +103,7 @@ main {
 
 	a {
 		border-color: rgba(47, 93, 124, 0.36);
-		color: #183247;
+		color: var(--fc-primary-deep);
 		font-weight: 800;
 	}
 

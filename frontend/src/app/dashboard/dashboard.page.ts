@@ -13,7 +13,6 @@ import { FinancialStoreService } from '../core/financial-store.service';
     <header class="page-header">
       <div>
         <h1>Money map for this month</h1>
-        <p>{{ store.selectedPlanMonthLabel() }} plan. Every rupee has a purpose, and the plan can flex when life changes.</p>
       </div>
       <div class="month-actions">
         <button mat-stroked-button type="button" (click)="changeMonth(-1)">Previous</button>
@@ -36,12 +35,10 @@ import { FinancialStoreService } from '../core/financial-store.service';
       </section>
     } @else {
       <section class="hero panel">
-        <div>
+        <div class="hero-copy">
           <span class="eyebrow">Monthly plan status</span>
           <strong>{{ planStatus().label }}</strong>
-          <p>{{ coachLine() }}</p>
         </div>
-        <mat-progress-bar mode="determinate" [value]="planStatus().progress" [ngClass]="planStatus().className" />
         <div class="status-factors" aria-label="Monthly plan status factors">
           @for (factor of statusFactors(); track factor.label) {
             <div>
@@ -51,18 +48,47 @@ import { FinancialStoreService } from '../core/financial-store.service';
             </div>
           }
         </div>
+        <div class="allocation-chart" aria-label="Monthly allocation chart">
+          @for (bar of allocationBars(); track bar.label) {
+            <div>
+              <span>{{ bar.label }}</span>
+              <strong>{{ bar.value | currency:'INR':'symbol':'1.0-0' }}</strong>
+              <i [style.width.%]="bar.percent" [class]="bar.className"></i>
+            </div>
+          }
+        </div>
       </section>
 
-      <section class="grid metrics" aria-label="Monthly dashboard metrics">
-        @for (metric of metrics(); track metric.label) {
-          <mat-card class="metric-card panel">
-            <mat-card-content>
-              <span>{{ metric.label }}</span>
-              <strong>{{ metric.value | currency:'INR':'symbol':'1.0-0' }}</strong>
-              <small>{{ metric.note }}</small>
-            </mat-card-content>
-          </mat-card>
-        }
+      <section class="dashboard-visuals" aria-label="Monthly dashboard visuals">
+        <mat-card class="panel visual-card cash-flow-card">
+          <mat-card-content>
+            <div class="pie-chart" [style.background]="cashFlowPieBackground()" aria-label="Cash flow pie chart"></div>
+            <div class="visual-copy">
+              <span class="eyebrow">Cash flow</span>
+              <strong>{{ summary().monthlyIncome | currency:'INR':'symbol':'1.0-0' }}</strong>
+              <div class="legend-list">
+                @for (slice of cashFlowSlices(); track slice.label) {
+                  <span><i [class]="slice.className"></i>{{ slice.label }} <b>{{ slice.value | currency:'INR':'symbol':'1.0-0' }}</b></span>
+                }
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="panel visual-card maturity-card">
+          <mat-card-content>
+            <div class="visual-copy">
+              <span class="eyebrow">Tracked investments</span>
+              <strong>{{ store.investments().totalCurrentValue | currency:'INR':'symbol':'1.0-0' }}</strong>
+              <small>toward {{ totalMaturityValue() | currency:'INR':'symbol':'1.0-0' }} maturity outlook</small>
+            </div>
+            <mat-progress-bar mode="determinate" [value]="investmentMaturityProgress()" />
+            <div class="progress-meta">
+              <span>{{ investmentMaturityProgress() | number:'1.0-0' }}%</span>
+              <span>{{ remainingToMaturity() | currency:'INR':'symbol':'1.0-0' }} left</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
       </section>
 
       <section class="dashboard-detail">
@@ -111,22 +137,6 @@ import { FinancialStoreService } from '../core/financial-store.service';
           </mat-card>
         }
 
-        @if (store.investments().holdings.length > 0) {
-          <mat-card class="panel">
-            <mat-card-header>
-              <mat-card-title>Investment tracker</mat-card-title>
-              <mat-card-subtitle>Persistent holdings across months, using your manual rates.</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-              <div class="tracker-grid">
-                <div><span>Invested</span><strong>{{ store.investments().totalInvested | currency:'INR':'symbol':'1.0-0' }}</strong></div>
-                <div><span>Current value</span><strong>{{ store.investments().totalCurrentValue | currency:'INR':'symbol':'1.0-0' }}</strong></div>
-                <div><span>Gain / loss</span><strong>{{ store.investments().totalGainLoss | currency:'INR':'symbol':'1.0-0' }}</strong></div>
-              </div>
-            </mat-card-content>
-          </mat-card>
-        }
-
         @if (store.goals().length > 0) {
           <mat-card class="panel">
             <mat-card-header>
@@ -149,17 +159,36 @@ import { FinancialStoreService } from '../core/financial-store.service';
     }
   `,
   styles: `
-    .hero { display: grid; gap: 22px; margin-bottom: 18px; padding: clamp(22px, 4vw, 38px); }
-    .hero strong { display: block; font-family: Newsreader, serif; font-size: clamp(2.7rem, 8vw, 5.4rem); line-height: 0.95; }
-    .eyebrow, .metric-card span { color: var(--fc-muted); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
-    .status-factors { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-    .status-factors div { background: linear-gradient(145deg, rgba(255,255,255,0.72), rgba(236,244,247,0.68)); border: 1px solid rgba(41,61,82,0.1); border-radius: 8px; padding: 14px; }
+    .hero { align-items: center; display: grid; grid-template-columns: minmax(180px, 0.7fr) minmax(280px, 1fr); gap: 14px; margin-bottom: 14px; padding: 18px; }
+    .hero-copy > strong { display: block; font-family: Newsreader, serif; font-size: clamp(2rem, 5vw, 3.1rem); line-height: 0.95; }
+    .eyebrow { color: var(--fc-muted); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+    .status-factors { display: grid; gap: 8px; }
+    .status-factors div { background: var(--fc-card-soft); border: 1px solid var(--fc-border); border-radius: 8px; padding: 9px 10px; }
     .status-factors span { color: var(--fc-muted); display: block; font-size: 0.82rem; }
-    .status-factors strong { display: block; font-size: 1.2rem; margin-top: 4px; }
-    .status-factors small { color: var(--fc-muted); display: block; margin-top: 4px; }
-    .metrics { margin: 16px 0; }
-    .metric-card strong { display: block; font-family: Newsreader, serif; margin: 10px 0 4px; font-size: 1.9rem; }
-    .metric-card small { color: var(--fc-muted); }
+    .status-factors strong { display: block; font-size: 1.05rem; margin-top: 2px; }
+    .status-factors small { color: var(--fc-muted); display: block; margin-top: 2px; }
+    .allocation-chart { display: grid; gap: 8px; grid-column: 1 / -1; }
+    .allocation-chart div { display: grid; grid-template-columns: 126px 120px minmax(90px, 1fr); gap: 10px; align-items: center; }
+    .allocation-chart span { color: var(--fc-muted); font-weight: 800; }
+    .allocation-chart i { border-radius: 999px; display: block; height: 8px; min-width: 8px; }
+    .bar-expense { background: #9b3f2f; }
+    .bar-investment { background: var(--fc-primary); }
+    .bar-remaining { background: var(--fc-accent); }
+    .dashboard-visuals { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: 12px; margin: 14px 0; }
+    .visual-card mat-card-content { align-items: center; display: grid; gap: 14px; padding: 16px; }
+    .cash-flow-card mat-card-content { grid-template-columns: 128px minmax(0, 1fr); }
+    .pie-chart { aspect-ratio: 1; border: 10px solid var(--fc-panel-strong); border-radius: 50%; box-shadow: inset 0 0 0 1px var(--fc-border); }
+    .visual-copy strong { display: block; font-family: Newsreader, serif; font-size: 1.7rem; line-height: 1; margin-top: 4px; }
+    .visual-copy small { color: var(--fc-muted); display: block; margin-top: 4px; }
+    .legend-list { display: grid; gap: 6px; margin-top: 12px; }
+    .legend-list span, .progress-meta { align-items: center; color: var(--fc-muted); display: flex; gap: 8px; justify-content: space-between; }
+    .legend-list i { border-radius: 999px; height: 10px; width: 10px; }
+    .legend-list b { color: var(--fc-ink); font-weight: 900; margin-left: auto; }
+    .slice-expense { background: #9b3f2f; }
+    .slice-investment { background: var(--fc-primary); }
+    .slice-remaining { background: var(--fc-accent); }
+    .maturity-card mat-card-content { align-content: center; min-height: 160px; }
+    .progress-meta { font-size: 0.86rem; font-weight: 800; }
     .dashboard-detail { display: grid; gap: 16px; }
     .budget-list { display: grid; gap: 12px; margin-top: 18px; }
     .budget-list div, .goal-list div { display: flex; justify-content: space-between; gap: 12px; }
@@ -167,28 +196,17 @@ import { FinancialStoreService } from '../core/financial-store.service';
     .budget-warning strong { color: #7a2d23; }
     .shortage-alert { border-left: 4px solid #9b3f2f; }
     .shortage-alert mat-card-content > strong { display: block; font-family: Newsreader, serif; font-size: 2rem; margin-top: 12px; }
-    .tracker-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding-top: 16px; }
-    .tracker-grid div { background: linear-gradient(145deg, rgba(255,255,255,0.72), rgba(241,237,224,0.7)); border-radius: 8px; padding: 14px; }
-    .tracker-grid span { color: var(--fc-muted); display: block; font-size: 0.82rem; }
-    .tracker-grid strong { display: block; margin-top: 4px; }
     .goal-list { display: grid; gap: 12px; padding-top: 16px; }
     .empty-state { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; padding: 18px; }
     .month-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
     .month-actions strong { color: var(--fc-primary-deep); min-width: 130px; text-align: center; }
-    @media (max-width: 820px) { .status-factors, .tracker-grid { grid-template-columns: 1fr; } .month-actions { justify-content: flex-start; } }
+    @media (max-width: 820px) { .hero, .dashboard-visuals, .cash-flow-card mat-card-content { grid-template-columns: 1fr; } .pie-chart { width: 126px; } .allocation-chart div { grid-template-columns: 1fr 1fr; } .allocation-chart i { grid-column: 1 / -1; } .month-actions { justify-content: flex-start; } }
   `
 })
 export class DashboardPage implements OnInit {
   readonly store = inject(FinancialStoreService);
   readonly summary = this.store.dashboard;
   readonly plan = this.store.monthlyPlan;
-
-  readonly metrics = computed(() => [
-    { label: 'Monthly income', value: this.summary().monthlyIncome, note: 'Planned income this month' },
-    { label: 'Monthly expenses', value: this.summary().monthlyExpenses, note: 'Recurring plus spent variable' },
-    { label: 'Remaining budget', value: this.summary().remainingBudget, note: 'After planned allocations' },
-    { label: 'Tracked investments', value: this.store.investments().totalCurrentValue, note: `${this.store.investments().totalGainLossPercent}% tracker return` }
-  ]);
 
   readonly planStatus = computed(() => {
     const remaining = this.summary().remainingBudget;
@@ -228,9 +246,26 @@ export class DashboardPage implements OnInit {
     }
   ]);
 
-  readonly coachLine = computed(() => this.summary().remainingBudget >= 0
-    ? 'This status is based only on your saved monthly plan: remaining money, monthly investment allocation, and variable budget usage.'
-    : 'This month needs a softer landing. Rebalance one category before reducing long-term priorities.');
+  readonly allocationBars = computed(() => {
+    const total = Math.max(Number(this.plan().totalIncome || this.summary().monthlyIncome || 0), 1);
+    const investments = this.plan().investments.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+
+    return [
+      { label: 'Expenses', value: this.summary().monthlyExpenses, percent: this.percentOf(this.summary().monthlyExpenses, total), className: 'bar-expense' },
+      { label: 'Investments', value: investments, percent: this.percentOf(investments, total), className: 'bar-investment' },
+      { label: 'Remaining', value: Math.max(this.summary().remainingBudget, 0), percent: this.percentOf(Math.max(this.summary().remainingBudget, 0), total), className: 'bar-remaining' }
+    ];
+  });
+
+  readonly cashFlowSlices = computed(() => {
+    const investments = this.plan().investments.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+
+    return [
+      { label: 'Expenses', value: this.summary().monthlyExpenses, className: 'slice-expense' },
+      { label: 'Investments', value: investments, className: 'slice-investment' },
+      { label: 'Remaining', value: Math.max(this.summary().remainingBudget, 0), className: 'slice-remaining' }
+    ];
+  });
 
   readonly overBudgetItems = computed(() => this.plan().variableBudgets
     .filter((budget) => Number(budget.spentAmount || 0) > Number(budget.budgetAmount || 0))
@@ -258,6 +293,41 @@ export class DashboardPage implements OnInit {
   utilizationClass(): string {
     const utilization = this.summary().budgetUtilization;
     return utilization > 100 ? 'over' : utilization > 80 ? 'watch' : 'steady';
+  }
+
+  cashFlowPieBackground(): string {
+    const total = Math.max(this.cashFlowSlices().reduce((sum, slice) => sum + Number(slice.value || 0), 0), 1);
+    let start = 0;
+    const colors: Record<string, string> = {
+      'slice-expense': '#9b3f2f',
+      'slice-investment': 'var(--fc-primary)',
+      'slice-remaining': 'var(--fc-accent)'
+    };
+    const segments = this.cashFlowSlices().map((slice) => {
+      const end = start + (Number(slice.value || 0) / total) * 100;
+      const segment = `${colors[slice.className]} ${start}% ${end}%`;
+      start = end;
+      return segment;
+    });
+
+    return `conic-gradient(${segments.join(', ')})`;
+  }
+
+  totalMaturityValue(): number {
+    return this.store.investments().holdings.reduce((total, holding) => total + Number(holding.projectedMaturityValue || holding.projectedValueFiveYears || 0), 0);
+  }
+
+  investmentMaturityProgress(): number {
+    const maturity = this.totalMaturityValue();
+    return maturity > 0 ? Math.min(100, Math.round((this.store.investments().totalCurrentValue / maturity) * 100)) : 0;
+  }
+
+  remainingToMaturity(): number {
+    return Math.max(this.totalMaturityValue() - this.store.investments().totalCurrentValue, 0);
+  }
+
+  private percentOf(value: number, total: number): number {
+    return Math.max(4, Math.min(100, Math.round((Number(value || 0) / total) * 100)));
   }
 
   async ngOnInit(): Promise<void> {

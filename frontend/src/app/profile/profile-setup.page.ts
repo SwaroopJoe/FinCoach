@@ -6,13 +6,15 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { Router } from '@angular/router';
 import { FinancialStoreService } from '../core/financial-store.service';
+import { NotificationService } from '../core/notification.service';
 import { CurrencyCode } from '../models/finance.models';
 
 @Component({
   selector: 'app-profile-setup-page',
-  imports: [MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatSnackBarModule, ReactiveFormsModule],
+  imports: [MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule, ReactiveFormsModule],
   template: `
     <header class="page-header">
       <div>
@@ -20,6 +22,14 @@ import { CurrencyCode } from '../models/finance.models';
         <p>These details shape planning defaults and reminders.</p>
       </div>
     </header>
+
+    <section class="theme-card panel">
+      <div>
+        <strong>Appearance</strong>
+        <span>{{ darkTheme ? 'Dark theme' : 'White theme' }}</span>
+      </div>
+      <mat-slide-toggle [checked]="darkTheme" (change)="setTheme($event.checked)">Dark</mat-slide-toggle>
+    </section>
 
     <mat-card class="panel form-card">
       <form [formGroup]="form" (ngSubmit)="save()">
@@ -46,6 +56,9 @@ import { CurrencyCode } from '../models/finance.models';
   `,
   styles: `
     .form-card { padding: clamp(16px, 3vw, 28px); }
+    .theme-card { align-items: center; display: flex; justify-content: space-between; gap: 16px; margin-bottom: 16px; padding: 16px 18px; }
+    .theme-card strong, .theme-card span { display: block; }
+    .theme-card span { color: var(--fc-muted); font-size: 0.9rem; margin-top: 2px; }
     .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
     .wide { width: 100%; }
     .actions { display: flex; align-items: center; justify-content: flex-end; gap: 16px; }
@@ -57,7 +70,9 @@ export class ProfileSetupPage implements OnInit {
   private readonly builder = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly notifications = inject(NotificationService);
   readonly currencies: CurrencyCode[] = ['INR', 'USD', 'EUR', 'GBP', 'AED'];
+  darkTheme = localStorage.getItem('financialCoachTheme') === 'dark';
 
   readonly form = this.builder.nonNullable.group({
     name: ['', Validators.required],
@@ -82,13 +97,14 @@ export class ProfileSetupPage implements OnInit {
         notificationTimes: profile.notificationTimes.join(', '),
         financialPreferences: profile.financialPreferences
       });
+      await this.notifications.scheduleProfileReminders(profile);
     }
   }
 
   async save(): Promise<void> {
     const value = this.form.getRawValue();
 
-    await this.store.saveProfile({
+    const savedProfile = await this.store.saveProfile({
       name: value.name,
       salary: value.salary,
       salaryCreditDay: value.salaryCreditDay,
@@ -99,7 +115,14 @@ export class ProfileSetupPage implements OnInit {
     });
 
     this.form.markAsPristine();
-    this.snackBar.open('Profile saved to SQLite.', 'OK', { duration: 3000 });
+    const scheduled = await this.notifications.scheduleProfileReminders(savedProfile);
+    this.snackBar.open(scheduled ? 'Profile saved. Reminders scheduled.' : 'Profile saved. Notifications need Android permission.', 'OK', { duration: 3500 });
     void this.router.navigateByUrl('/dashboard');
+  }
+
+  setTheme(enabled: boolean): void {
+    this.darkTheme = enabled;
+    localStorage.setItem('financialCoachTheme', enabled ? 'dark' : 'light');
+    document.body.classList.toggle('fc-dark-theme', enabled);
   }
 }
