@@ -7,6 +7,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { ApiService, AuthResponse } from '../core/api.service';
+import { FinancialStoreService } from '../core/financial-store.service';
 
 @Component({
   selector: 'app-auth-placeholder-page',
@@ -53,6 +54,7 @@ export class AuthPlaceholderPage {
 
   constructor(
     private readonly api: ApiService,
+    private readonly store: FinancialStoreService,
     private readonly router: Router
   ) {}
 
@@ -109,6 +111,7 @@ export class AuthPlaceholderPage {
   }
 
   private completeAuth(response: AuthResponse): void {
+    this.store.resetForAuthChange();
     localStorage.setItem('financialCoachToken', response.accessToken);
     localStorage.setItem('financialCoachUserId', response.userId);
     localStorage.setItem('financialCoachUsername', response.username);

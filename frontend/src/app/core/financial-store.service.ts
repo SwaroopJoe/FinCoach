@@ -42,6 +42,18 @@ export class FinancialStoreService {
 
   constructor(private readonly api: ApiService) {}
 
+  resetForAuthChange(): void {
+    this.profile.set(null);
+    this.selectedPlanMonth.set(this.currentMonthIso());
+    this.monthlyPlan.set(this.createMonthlyPlanDraft(null, this.selectedPlanMonth()));
+    this.dashboard.set(emptyDashboard);
+    this.investments.set(emptyInvestmentSummary);
+    this.goals.set([]);
+    this.loading.set(false);
+    this.saving.set(false);
+    this.error.set(null);
+  }
+
   async loadProfile(): Promise<UserProfile | null> {
     this.loading.set(true);
     this.error.set(null);

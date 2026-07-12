@@ -5,6 +5,8 @@ namespace FinancialCoach.Domain.Entities;
 
 public sealed class UserProfile : BaseEntity
 {
+    public Guid? AppUserId { get; set; }
+    public AppUser? AppUser { get; set; }
     public string Name { get; set; } = string.Empty;
     public decimal Salary { get; set; }
     public int SalaryCreditDay { get; set; } = 1;

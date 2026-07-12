@@ -55,6 +55,7 @@ if (bool.TryParse(app.Configuration["Database:AutoCreate"], out var autoCreateDa
 
     await EnsureFeedbackEntriesTableAsync(dbContext);
     await EnsureInvestmentTenureColumnAsync(dbContext);
+    await EnsureUserProfileAppUserColumnAsync(dbContext);
 }
 
 // Configure the HTTP request pipeline.
@@ -142,4 +143,32 @@ static async Task EnsureInvestmentTenureColumnAsync(FinancialCoachDbContext dbCo
     catch (Exception exception) when (exception.Message.Contains("duplicate column", StringComparison.OrdinalIgnoreCase))
     {
     }
+}
+
+static async Task EnsureUserProfileAppUserColumnAsync(FinancialCoachDbContext dbContext)
+{
+    var provider = dbContext.Database.ProviderName ?? string.Empty;
+
+    if (provider.Contains("Npgsql", StringComparison.OrdinalIgnoreCase))
+    {
+        await dbContext.Database.ExecuteSqlRawAsync("""
+            ALTER TABLE "UserProfiles" ADD COLUMN IF NOT EXISTS "AppUserId" uuid NULL;
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_UserProfiles_AppUserId" ON "UserProfiles" ("AppUserId");
+            """);
+        return;
+    }
+
+    try
+    {
+        await dbContext.Database.ExecuteSqlRawAsync("""
+            ALTER TABLE "UserProfiles" ADD COLUMN "AppUserId" TEXT NULL;
+            """);
+    }
+    catch (Exception exception) when (exception.Message.Contains("duplicate column", StringComparison.OrdinalIgnoreCase))
+    {
+    }
+
+    await dbContext.Database.ExecuteSqlRawAsync("""
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_UserProfiles_AppUserId" ON "UserProfiles" ("AppUserId");
+        """);
 }

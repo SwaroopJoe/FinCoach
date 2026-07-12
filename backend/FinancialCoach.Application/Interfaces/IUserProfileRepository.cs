@@ -6,5 +6,6 @@ public interface IUserProfileRepository
 {
     Task<UserProfile?> GetAsync(Guid id, CancellationToken cancellationToken);
     Task<UserProfile?> GetDefaultAsync(CancellationToken cancellationToken);
+    Task<UserProfile?> GetByAppUserIdAsync(Guid appUserId, CancellationToken cancellationToken);
     Task<UserProfile> UpsertAsync(UserProfile profile, CancellationToken cancellationToken);
 }

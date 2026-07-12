@@ -13,6 +13,9 @@ public sealed class UserProfileRepository(FinancialCoachDbContext dbContext) : I
     public Task<UserProfile?> GetDefaultAsync(CancellationToken cancellationToken) =>
         dbContext.UserProfiles.OrderBy(profile => profile.CreatedAtUtc).FirstOrDefaultAsync(cancellationToken);
 
+    public Task<UserProfile?> GetByAppUserIdAsync(Guid appUserId, CancellationToken cancellationToken) =>
+        dbContext.UserProfiles.FirstOrDefaultAsync(profile => profile.AppUserId == appUserId, cancellationToken);
+
     public async Task<UserProfile> UpsertAsync(UserProfile profile, CancellationToken cancellationToken)
     {
         if (dbContext.Entry(profile).State == EntityState.Detached)

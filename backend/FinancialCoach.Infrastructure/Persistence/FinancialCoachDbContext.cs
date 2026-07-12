@@ -32,10 +32,12 @@ public sealed class FinancialCoachDbContext(DbContextOptions<FinancialCoachDbCon
 
         modelBuilder.Entity<UserProfile>(entity =>
         {
+            entity.HasIndex(item => item.AppUserId).IsUnique();
             entity.Property(item => item.Name).HasMaxLength(120).IsRequired();
             entity.Property(item => item.Salary).HasPrecision(18, 2);
             entity.Property(item => item.NotificationTimes).HasMaxLength(120);
             entity.Property(item => item.FinancialPreferences).HasMaxLength(600);
+            entity.HasOne(item => item.AppUser).WithMany().HasForeignKey(item => item.AppUserId).OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<MonthlyPlan>(entity =>

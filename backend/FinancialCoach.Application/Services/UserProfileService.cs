@@ -6,17 +6,18 @@ namespace FinancialCoach.Application.Services;
 
 public sealed class UserProfileService(IUserProfileRepository repository) : IUserProfileService
 {
-    public async Task<UserProfileResponse?> GetDefaultAsync(CancellationToken cancellationToken)
+    public async Task<UserProfileResponse?> GetByAppUserIdAsync(Guid appUserId, CancellationToken cancellationToken)
     {
-        var profile = await repository.GetDefaultAsync(cancellationToken);
+        var profile = await repository.GetByAppUserIdAsync(appUserId, cancellationToken);
         return profile?.ToResponse();
     }
 
-    public async Task<UserProfileResponse> UpsertAsync(UserProfileRequest request, CancellationToken cancellationToken)
+    public async Task<UserProfileResponse> UpsertAsync(Guid appUserId, UserProfileRequest request, CancellationToken cancellationToken)
     {
-        var existing = await repository.GetDefaultAsync(cancellationToken);
+        var existing = await repository.GetByAppUserIdAsync(appUserId, cancellationToken);
         var profile = existing ?? new UserProfile();
 
+        profile.AppUserId = appUserId;
         profile.Name = request.Name.Trim();
         profile.Salary = request.Salary;
         profile.SalaryCreditDay = request.SalaryCreditDay;

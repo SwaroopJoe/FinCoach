@@ -10,8 +10,8 @@ public interface IAuthPlaceholderService
 
 public interface IUserProfileService
 {
-    Task<UserProfileResponse?> GetDefaultAsync(CancellationToken cancellationToken);
-    Task<UserProfileResponse> UpsertAsync(UserProfileRequest request, CancellationToken cancellationToken);
+    Task<UserProfileResponse?> GetByAppUserIdAsync(Guid appUserId, CancellationToken cancellationToken);
+    Task<UserProfileResponse> UpsertAsync(Guid appUserId, UserProfileRequest request, CancellationToken cancellationToken);
 }
 
 public interface IMonthlyPlanningService
