@@ -55,6 +55,7 @@ if (bool.TryParse(app.Configuration["Database:AutoCreate"], out var autoCreateDa
 
     await EnsureFeedbackEntriesTableAsync(dbContext);
     await EnsureInvestmentTenureColumnAsync(dbContext);
+    await EnsureInvestmentMonthlyContributionColumnAsync(dbContext);
     await EnsureUserProfileAppUserColumnAsync(dbContext);
 }
 
@@ -171,4 +172,27 @@ static async Task EnsureUserProfileAppUserColumnAsync(FinancialCoachDbContext db
     await dbContext.Database.ExecuteSqlRawAsync("""
         CREATE UNIQUE INDEX IF NOT EXISTS "IX_UserProfiles_AppUserId" ON "UserProfiles" ("AppUserId");
         """);
+}
+
+static async Task EnsureInvestmentMonthlyContributionColumnAsync(FinancialCoachDbContext dbContext)
+{
+    var provider = dbContext.Database.ProviderName ?? string.Empty;
+
+    if (provider.Contains("Npgsql", StringComparison.OrdinalIgnoreCase))
+    {
+        await dbContext.Database.ExecuteSqlRawAsync("""
+            ALTER TABLE "InvestmentHoldings" ADD COLUMN IF NOT EXISTS "MonthlyContributionAmount" numeric(18,2) NOT NULL DEFAULT 0;
+            """);
+        return;
+    }
+
+    try
+    {
+        await dbContext.Database.ExecuteSqlRawAsync("""
+            ALTER TABLE "InvestmentHoldings" ADD COLUMN "MonthlyContributionAmount" decimal(18,2) NOT NULL DEFAULT 0;
+            """);
+    }
+    catch (Exception exception) when (exception.Message.Contains("duplicate column", StringComparison.OrdinalIgnoreCase))
+    {
+    }
 }

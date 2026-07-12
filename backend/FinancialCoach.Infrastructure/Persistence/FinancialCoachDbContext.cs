@@ -107,6 +107,7 @@ public sealed class FinancialCoachDbContext(DbContextOptions<FinancialCoachDbCon
             entity.Property(item => item.CurrentRate).HasPrecision(18, 2);
             entity.Property(item => item.ExpectedAnnualReturnPercent).HasPrecision(6, 2);
             entity.Property(item => item.TenureYears).HasDefaultValue(5);
+            entity.Property(item => item.MonthlyContributionAmount).HasPrecision(18, 2);
             entity.Property(item => item.Notes).HasMaxLength(400);
             entity.HasOne(item => item.UserProfile).WithMany().HasForeignKey(item => item.UserProfileId).OnDelete(DeleteBehavior.Cascade);
         });

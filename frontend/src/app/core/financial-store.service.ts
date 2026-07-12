@@ -368,6 +368,33 @@ export class FinancialStoreService {
     }
   }
 
+  async addMonthlyInvestmentAllocation(name: string, amount: number): Promise<MonthlyPlan> {
+    const profile = this.profile() ?? await this.loadProfile();
+
+    if (!profile) {
+      throw new Error('Create a profile before adding monthly investment allocations.');
+    }
+
+    const plan = await this.loadMonthlyPlanForSelectedMonth();
+    const normalizedName = name.trim() || 'Investment contribution';
+    const allocationAmount = Number(amount || 0);
+
+    if (allocationAmount <= 0) {
+      return plan;
+    }
+
+    const investments = plan.investments.filter((item) => item.name.trim() || Number(item.amount || 0) > 0);
+    const existing = investments.find((item) => item.name.trim().toLocaleLowerCase() === normalizedName.toLocaleLowerCase());
+
+    if (existing) {
+      existing.amount = Number(existing.amount || 0) + allocationAmount;
+    } else {
+      investments.push({ name: normalizedName, amount: allocationAmount });
+    }
+
+    return this.savePlan({ ...plan, investments });
+  }
+
   async deleteInvestment(id: string): Promise<void> {
     this.saving.set(true);
     this.error.set(null);

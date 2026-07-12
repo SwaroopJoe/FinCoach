@@ -80,6 +80,8 @@ public sealed class InvestmentService(IInvestmentRepository repository) : IInves
             holding.CurrentRate = request.RateAtContribution;
         }
 
+        holding.MonthlyContributionAmount = request.Amount;
+
         holding.UpdatedAtUtc = DateTime.UtcNow;
         holding.SyncVersion++;
 
@@ -98,6 +100,7 @@ public sealed class InvestmentService(IInvestmentRepository repository) : IInves
         holding.CurrentRate = request.CurrentRate;
         holding.ExpectedAnnualReturnPercent = request.ExpectedAnnualReturnPercent;
         holding.TenureYears = request.TenureYears;
+        holding.MonthlyContributionAmount = request.MonthlyContributionAmount;
         holding.Notes = request.Notes.Trim();
     }
 
@@ -112,15 +115,16 @@ public sealed class InvestmentService(IInvestmentRepository repository) : IInves
         holding.CurrentRate,
         holding.ExpectedAnnualReturnPercent,
         holding.TenureYears,
+        holding.MonthlyContributionAmount,
         holding.Notes,
         holding.InvestedAmount,
         holding.CurrentValue,
         holding.GainLoss,
         holding.GainLossPercent,
-        Project(holding.CurrentValue, holding.ExpectedAnnualReturnPercent, 1),
-        Project(holding.CurrentValue, holding.ExpectedAnnualReturnPercent, 3),
-        Project(holding.CurrentValue, holding.ExpectedAnnualReturnPercent, 5),
-        Project(holding.CurrentValue, holding.ExpectedAnnualReturnPercent, holding.TenureYears),
+        Project(holding.CurrentValue, holding.MonthlyContributionAmount, holding.ExpectedAnnualReturnPercent, 1),
+        Project(holding.CurrentValue, holding.MonthlyContributionAmount, holding.ExpectedAnnualReturnPercent, 3),
+        Project(holding.CurrentValue, holding.MonthlyContributionAmount, holding.ExpectedAnnualReturnPercent, 5),
+        Project(holding.CurrentValue, holding.MonthlyContributionAmount, holding.ExpectedAnnualReturnPercent, holding.TenureYears),
         holding.Contributions.OrderByDescending(item => item.ContributionMonth).Select(ToContributionResponse).ToArray());
 
     private static InvestmentContributionResponse ToContributionResponse(InvestmentContribution contribution) => new(
@@ -132,14 +136,19 @@ public sealed class InvestmentService(IInvestmentRepository repository) : IInves
         contribution.RateAtContribution,
         contribution.Description);
 
-    private static decimal Project(decimal currentValue, decimal expectedAnnualReturnPercent, int years)
+    private static decimal Project(decimal currentValue, decimal monthlyContributionAmount, decimal expectedAnnualReturnPercent, int years)
     {
-        if (currentValue <= 0 || expectedAnnualReturnPercent == 0)
+        if (currentValue <= 0 && monthlyContributionAmount <= 0)
         {
             return currentValue;
         }
 
-        var projected = (double)currentValue * Math.Pow(1 + ((double)expectedAnnualReturnPercent / 100), years);
+        var months = years * 12;
+        var monthlyContribution = (double)monthlyContributionAmount;
+        var monthlyRate = Math.Pow(1 + ((double)expectedAnnualReturnPercent / 100), 1.0 / 12.0) - 1;
+        var projectedCurrentValue = (double)currentValue * Math.Pow(1 + monthlyRate, months);
+        var projectedContributions = monthlyRate == 0 ? monthlyContribution * months : monthlyContribution * ((Math.Pow(1 + monthlyRate, months) - 1) / monthlyRate);
+        var projected = projectedCurrentValue + projectedContributions;
         return Math.Round((decimal)projected, 2);
     }
 }

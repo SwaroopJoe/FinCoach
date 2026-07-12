@@ -22,10 +22,7 @@ import { InvestmentCategory, InvestmentHolding } from '../models/finance.models'
     </header>
 
     <section class="summary-strip panel">
-      <div><span>Total invested</span><strong>{{ store.investments().totalInvested | currency:'INR':'symbol':'1.0-0' }}</strong></div>
       <div><span>Current value</span><strong>{{ store.investments().totalCurrentValue | currency:'INR':'symbol':'1.0-0' }}</strong></div>
-      <div><span>Gain / loss</span><strong>{{ store.investments().totalGainLoss | currency:'INR':'symbol':'1.0-0' }}</strong></div>
-      <div><span>Return</span><strong>{{ store.investments().totalGainLossPercent | number:'1.0-2' }}%</strong></div>
       <div><span>Maturity outlook</span><strong>{{ totalMaturityValue() | currency:'INR':'symbol':'1.0-0' }}</strong></div>
     </section>
 
@@ -40,8 +37,8 @@ import { InvestmentCategory, InvestmentHolding } from '../models/finance.models'
             <mat-form-field appearance="outline"><mat-label>Name</mat-label><input matInput formControlName="name" placeholder="Gold, Nifty SIP, Apple stock" /></mat-form-field>
             <label class="field-label">Category<select formControlName="category"><option value="Gold">Gold</option><option value="MutualFundSip">Mutual fund / SIP</option><option value="Stock">Stock</option><option value="FixedDepositPpf">FD / PPF</option><option value="Custom">Custom</option></select></label>
             <mat-form-field appearance="outline"><mat-label>Custom category</mat-label><input matInput formControlName="customCategory" /></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Amount invested</mat-label><input matInput type="number" formControlName="amountInvested" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Current value</mat-label><input matInput type="number" formControlName="currentValue" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Contribution this month</mat-label><input matInput type="number" formControlName="monthlyContribution" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Expected annual growth %</mat-label><input matInput type="number" formControlName="expectedAnnualReturnPercent" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Remaining tenure years</mat-label><input matInput type="number" formControlName="tenureYears" /></mat-form-field>
             <mat-form-field appearance="outline" class="wide"><mat-label>Notes</mat-label><input matInput formControlName="notes" /></mat-form-field>
@@ -59,13 +56,13 @@ import { InvestmentCategory, InvestmentHolding } from '../models/finance.models'
             </mat-card-header>
             <mat-card-content>
               <div class="holding-metrics">
-                <span>Invested <strong>{{ holding.investedAmount || 0 | currency:'INR':'symbol':'1.0-0' }}</strong></span>
-                <span>Value <strong>{{ holding.currentValue || 0 | currency:'INR':'symbol':'1.0-0' }}</strong></span>
-                <span>Gain/loss <strong>{{ holding.gainLoss || 0 | currency:'INR':'symbol':'1.0-0' }}</strong></span>
+                <span>Current value <strong>{{ holding.currentValue || 0 | currency:'INR':'symbol':'1.0-0' }}</strong></span>
+                <span>Monthly contribution <strong>{{ holding.monthlyContributionAmount || 0 | currency:'INR':'symbol':'1.0-0' }}</strong></span>
+                <span>Remaining tenure <strong>{{ holding.tenureYears || 5 }} years</strong></span>
               </div>
               <div class="projection-header">
                 <strong>Maturity outlook</strong>
-                <small>{{ holding.tenureYears || 5 }} years remaining at {{ holding.expectedAnnualReturnPercent | number:'1.0-2' }}% expected annual growth</small>
+                <small>{{ holding.tenureYears || 5 }} years remaining at {{ holding.expectedAnnualReturnPercent | number:'1.0-2' }}% growth with {{ holding.monthlyContributionAmount || 0 | currency:'INR':'symbol':'1.0-0' }}/month</small>
               </div>
               <div class="maturity-total">
                 <span>Predicted amount at maturity</span>
@@ -77,7 +74,7 @@ import { InvestmentCategory, InvestmentHolding } from '../models/finance.models'
                 <span><small>5 years</small><strong>{{ holding.projectedValueFiveYears || 0 | currency:'INR':'symbol':'1.0-0' }}</strong></span>
               </div>
               <form [formGroup]="contributionForm" (ngSubmit)="addContribution(holding)" class="contribution-row">
-                <mat-form-field appearance="outline"><mat-label>Additional amount</mat-label><input matInput type="number" formControlName="amount" /></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Contribution this month</mat-label><input matInput type="number" formControlName="amount" /></mat-form-field>
                 <mat-form-field appearance="outline"><mat-label>Current total value</mat-label><input matInput type="number" formControlName="currentTotalValue" /></mat-form-field>
                 <button mat-stroked-button type="submit" [disabled]="contributionForm.invalid || store.saving()">Add contribution</button>
                 <button mat-button type="button" (click)="deleteHolding(holding)">Delete</button>
@@ -124,8 +121,8 @@ export class InvestmentsPage implements OnInit {
     name: ['', Validators.required],
     category: ['Gold' as InvestmentCategory, Validators.required],
     customCategory: [''],
-    amountInvested: [0, [Validators.required, Validators.min(0)]],
     currentValue: [0, [Validators.required, Validators.min(0)]],
+    monthlyContribution: [0, [Validators.required, Validators.min(0)]],
     expectedAnnualReturnPercent: [0, [Validators.required, Validators.min(0)]],
     tenureYears: [5, [Validators.required, Validators.min(1), Validators.max(50)]],
     notes: ['']
@@ -150,23 +147,29 @@ export class InvestmentsPage implements OnInit {
     }
 
     const value = this.holdingForm.getRawValue();
-    const amountInvested = Number(value.amountInvested || 0);
     const currentValue = Number(value.currentValue || 0);
+    const monthlyContribution = Number(value.monthlyContribution || 0);
 
     await this.store.saveInvestment({
       userProfileId: profile.id,
       name: value.name,
       category: value.category,
       customCategory: value.customCategory,
-      quantity: amountInvested,
-      averageCost: amountInvested > 0 ? 1 : 0,
-      currentRate: amountInvested > 0 ? currentValue / amountInvested : 0,
+      quantity: currentValue,
+      averageCost: currentValue > 0 ? 1 : 0,
+      currentRate: currentValue > 0 ? 1 : 0,
       expectedAnnualReturnPercent: value.expectedAnnualReturnPercent,
       tenureYears: value.tenureYears,
+      monthlyContributionAmount: monthlyContribution,
       notes: value.notes
     });
-    this.holdingForm.reset({ name: '', category: 'Gold', customCategory: '', amountInvested: 0, currentValue: 0, expectedAnnualReturnPercent: 0, tenureYears: 5, notes: '' });
-    this.snackBar.open('Investment holding saved.', 'OK', { duration: 2500 });
+
+    if (monthlyContribution > 0) {
+      await this.store.addMonthlyInvestmentAllocation(value.name, monthlyContribution);
+    }
+
+    this.holdingForm.reset({ name: '', category: 'Gold', customCategory: '', currentValue: 0, monthlyContribution: 0, expectedAnnualReturnPercent: 0, tenureYears: 5, notes: '' });
+    this.snackBar.open(monthlyContribution > 0 ? 'Investment saved and contribution deducted in this month\'s plan.' : 'Investment holding saved.', 'OK', { duration: 3500 });
   }
 
   async addContribution(holding: InvestmentHolding): Promise<void> {
@@ -184,8 +187,9 @@ export class InvestmentsPage implements OnInit {
       rateAtContribution: updatedAmount > 0 && value.currentTotalValue > 0 ? value.currentTotalValue / updatedAmount : 0,
       description: value.description
     });
+    await this.store.addMonthlyInvestmentAllocation(holding.name, value.amount);
     this.contributionForm.reset({ amount: 0, currentTotalValue: 0, description: 'Monthly contribution' });
-    this.snackBar.open('Investment contribution added.', 'OK', { duration: 2500 });
+    this.snackBar.open('Contribution added and deducted in this month\'s plan.', 'OK', { duration: 3500 });
   }
 
   async deleteHolding(holding: InvestmentHolding): Promise<void> {

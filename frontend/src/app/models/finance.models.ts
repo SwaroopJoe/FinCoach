@@ -89,6 +89,7 @@ export interface InvestmentHolding {
   currentRate: number;
   expectedAnnualReturnPercent: number;
   tenureYears: number;
+  monthlyContributionAmount: number;
   notes: string;
   investedAmount?: number;
   currentValue?: number;

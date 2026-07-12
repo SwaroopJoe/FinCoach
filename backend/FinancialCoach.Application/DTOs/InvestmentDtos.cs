@@ -12,6 +12,7 @@ public sealed record InvestmentHoldingRequest(
     decimal CurrentRate,
     decimal ExpectedAnnualReturnPercent,
     int TenureYears,
+    decimal MonthlyContributionAmount,
     string Notes);
 
 public sealed record InvestmentContributionRequest(
@@ -33,6 +34,7 @@ public sealed record InvestmentHoldingResponse(
     decimal CurrentRate,
     decimal ExpectedAnnualReturnPercent,
     int TenureYears,
+    decimal MonthlyContributionAmount,
     string Notes,
     decimal InvestedAmount,
     decimal CurrentValue,
