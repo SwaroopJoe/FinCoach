@@ -33,6 +33,11 @@ export const routes: Routes = [
 		loadComponent: () => import('./goals/goals.page').then((page) => page.GoalsPage)
 	},
 	{
+		path: 'ai-coach',
+		canActivate: [authGuard],
+		loadComponent: () => import('./ai-coach/ai-coach.page').then((page) => page.AiCoachPage)
+	},
+	{
 		path: 'feedback',
 		canActivate: [authGuard],
 		loadComponent: () => import('./feedback/feedback.page').then((page) => page.FeedbackPage)

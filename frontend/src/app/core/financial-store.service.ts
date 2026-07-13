@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { DashboardSummary, FinancialGoal, GoalContribution, InvestmentContribution, InvestmentHolding, InvestmentSummary, MonthlyPlan, UserProfile } from '../models/finance.models';
+import { AiCoachPatch, AiCoachResponse, DashboardSummary, FinancialGoal, GoalContribution, InvestmentContribution, InvestmentHolding, InvestmentSummary, MonthlyPlan, UserProfile } from '../models/finance.models';
 import { ApiService } from './api.service';
 
 const emptyDashboard: DashboardSummary = {
@@ -36,6 +36,8 @@ export class FinancialStoreService {
   readonly dashboard = signal<DashboardSummary>(emptyDashboard);
   readonly investments = signal<InvestmentSummary>(emptyInvestmentSummary);
   readonly goals = signal<FinancialGoal[]>([]);
+  readonly aiCoach = signal<AiCoachResponse | null>(null);
+  readonly pendingAiCoachPatches = signal<AiCoachPatch[]>([]);
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
@@ -49,6 +51,8 @@ export class FinancialStoreService {
     this.dashboard.set(emptyDashboard);
     this.investments.set(emptyInvestmentSummary);
     this.goals.set([]);
+    this.aiCoach.set(null);
+    this.pendingAiCoachPatches.set([]);
     this.loading.set(false);
     this.saving.set(false);
     this.error.set(null);
@@ -500,6 +504,44 @@ export class FinancialStoreService {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  async loadAiMonthlyCoach(question = ''): Promise<AiCoachResponse> {
+    const profile = this.profile() ?? await this.loadProfile();
+
+    if (!profile) {
+      throw new Error('Create a profile before using AI Coach.');
+    }
+
+    const { year, month } = this.selectedMonthParts();
+    this.loading.set(true);
+    this.error.set(null);
+
+    try {
+      const response = await firstValueFrom(this.api.getAiMonthlyCoach({
+        userProfileId: profile.id,
+        year,
+        month,
+        question: question.trim() || undefined
+      }));
+      this.aiCoach.set(response);
+      return response;
+    } catch (error) {
+      this.error.set('Could not load AI Coach guidance.');
+      throw error;
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  queueAiCoachPatches(patches: AiCoachPatch[]): void {
+    this.pendingAiCoachPatches.set(patches);
+  }
+
+  consumeAiCoachPatches(): AiCoachPatch[] {
+    const patches = this.pendingAiCoachPatches();
+    this.pendingAiCoachPatches.set([]);
+    return patches;
   }
 
   createMonthlyPlanDraft(profile: UserProfile | null, planMonth = this.selectedPlanMonth()): MonthlyPlan {

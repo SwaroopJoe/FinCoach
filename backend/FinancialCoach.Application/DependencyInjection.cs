@@ -17,6 +17,7 @@ public static class DependencyInjection
         services.AddScoped<IInvestmentService, InvestmentService>();
         services.AddScoped<IGoalService, GoalService>();
         services.AddScoped<IFeedbackService, FeedbackService>();
+        services.AddHttpClient<IAiCoachService, AiCoachService>();
 
         return services;
     }

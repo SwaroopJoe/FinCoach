@@ -147,3 +147,44 @@ export interface FeedbackEntry {
   status: string;
   createdAtUtc: string;
 }
+
+export interface AiCoachRequest {
+  userProfileId: string;
+  year?: number;
+  month?: number;
+  question?: string;
+}
+
+export interface AiCoachPatch {
+  operation: 'add' | 'update' | 'remove';
+  section: 'incomeItems' | 'recurringExpenses' | 'investments' | 'variableBudgets' | 'borrowingShortages';
+  matchName?: string | null;
+  matchCategory?: string | null;
+  field?: string | null;
+  currentValue?: number | null;
+  suggestedValue?: number | null;
+  amountDelta?: number | null;
+  reason: string;
+  name?: string | null;
+  category?: string | null;
+}
+
+export interface AiCoachItem {
+  title: string;
+  message: string;
+  priority: 'Low' | 'Medium' | 'High' | string;
+  category: string;
+  recommendedAction?: string | null;
+  patches?: AiCoachPatch[] | null;
+}
+
+export interface AiCoachResponse {
+  headline: string;
+  summary: string;
+  generatedAtUtc: string;
+  sourceSnapshotMonth: string;
+  isAiGenerated: boolean;
+  insights: AiCoachItem[];
+  actionItems: AiCoachItem[];
+  riskWarnings: AiCoachItem[];
+}

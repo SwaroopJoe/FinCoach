@@ -9,7 +9,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { FinancialStoreService } from '../core/financial-store.service';
-import { MonthlyPlan } from '../models/finance.models';
+import { AiCoachPatch, MonthlyPlan } from '../models/finance.models';
 
 @Component({
   selector: 'app-monthly-planning-page',
@@ -329,6 +329,7 @@ export class MonthlyPlanningPage {
     this.plan = await this.store.loadMonthlyPlanForSelectedMonth();
     await Promise.all([this.store.loadGoals(), this.store.loadInvestments()]);
     this.replaceFormWithPlan(this.plan);
+    this.applyPendingAiCoachPatches();
     await this.offerPreviousMonthStart();
   }
 
@@ -561,6 +562,7 @@ export class MonthlyPlanningPage {
 
   private hasInvalidInvestmentAllocations(): boolean {
     const validHoldings = new Set(this.store.investments().holdings.map((holding) => this.normalizeInvestmentName(holding.name)));
+    validHoldings.add('savings buffer');
     const selected = this.investments.controls
       .map((control) => this.asGroup(control).getRawValue() as { name: string; amount: number })
       .filter((item) => this.hasMoneyLineContent(item));
@@ -586,6 +588,141 @@ export class MonthlyPlanningPage {
     this.form.setControl('borrowingShortages', this.builder.array(plan.borrowingShortages.map((item) => this.optionalBorrowingLine(item.name, item.amount, item.reason))));
     this.form.updateValueAndValidity();
     this.changeDetector.detectChanges();
+  }
+
+  private applyPendingAiCoachPatches(): void {
+    const patches = this.store.consumeAiCoachPatches();
+
+    if (patches.length === 0) {
+      return;
+    }
+
+    const applied = patches.filter((patch) => this.applyAiCoachPatch(patch)).length;
+
+    if (applied > 0) {
+      this.form.markAsDirty();
+      this.form.updateValueAndValidity();
+      this.snackBar.open(`${applied} AI suggestion${applied === 1 ? '' : 's'} applied. Review totals, then save monthly plan.`, 'OK', {
+        duration: 5000,
+        horizontalPosition: 'right',
+        verticalPosition: 'bottom'
+      });
+    }
+  }
+
+  private applyAiCoachPatch(patch: AiCoachPatch): boolean {
+    if (!['add', 'update', 'remove'].includes(patch.operation)) {
+      return false;
+    }
+
+    if (patch.section === 'variableBudgets') {
+      return this.applyVariablePatch(patch);
+    }
+
+    return this.applyMoneyPatch(patch);
+  }
+
+  private applyMoneyPatch(patch: AiCoachPatch): boolean {
+    const array = this.moneyArrayForPatch(patch.section);
+
+    if (!array) {
+      return false;
+    }
+
+    const targetName = String(patch.matchName || patch.name || '').trim();
+    const existingIndex = array.controls.findIndex((control) => String(this.asGroup(control).get('name')?.value ?? '').trim().toLowerCase() === targetName.toLowerCase());
+
+    if (patch.operation === 'remove') {
+      if (existingIndex < 0 || array.length <= 1) {
+        return false;
+      }
+
+      array.removeAt(existingIndex);
+      return true;
+    }
+
+    const amount = Number(patch.suggestedValue ?? patch.amountDelta ?? 0);
+
+    if (!targetName || amount < 0 || (patch.section === 'investments' && !this.isAllowedInvestmentPatchName(targetName))) {
+      return false;
+    }
+
+    if (patch.operation === 'add') {
+      const blankIndex = array.controls.findIndex((control) => {
+        const group = this.asGroup(control);
+        return !String(group.get('name')?.value ?? '').trim() && Number(group.get('amount')?.value ?? 0) === 0;
+      });
+      const group = blankIndex >= 0 ? this.asGroup(array.at(blankIndex)) : this.createMoneyPatchLine(patch.section);
+
+      if (blankIndex < 0) {
+        array.insert(0, group);
+      }
+
+      group.patchValue(patch.section === 'borrowingShortages'
+        ? { name: targetName, amount, reason: patch.reason }
+        : { name: targetName, amount });
+      return true;
+    }
+
+    if (existingIndex < 0) {
+      return false;
+    }
+
+    this.asGroup(array.at(existingIndex)).patchValue({ amount });
+    return true;
+  }
+
+  private applyVariablePatch(patch: AiCoachPatch): boolean {
+    const targetCategory = String(patch.matchCategory || patch.category || '').trim();
+    const existingIndex = this.variables.controls.findIndex((control) => String(this.asGroup(control).get('category')?.value ?? '').trim().toLowerCase() === targetCategory.toLowerCase());
+
+    if (patch.operation === 'remove') {
+      if (existingIndex < 0 || this.variables.length <= 1) {
+        return false;
+      }
+
+      this.variables.removeAt(existingIndex);
+      return true;
+    }
+
+    const amount = Number(patch.suggestedValue ?? patch.amountDelta ?? 0);
+
+    if (!targetCategory || amount < 0) {
+      return false;
+    }
+
+    const field = patch.field === 'spentAmount' ? 'spentAmount' : 'budgetAmount';
+
+    if (patch.operation === 'add') {
+      this.variables.insert(0, this.optionalVariableLine(targetCategory, field === 'budgetAmount' ? amount : 0, field === 'spentAmount' ? amount : 0));
+      return true;
+    }
+
+    if (existingIndex < 0) {
+      return false;
+    }
+
+    this.asGroup(this.variables.at(existingIndex)).patchValue({ [field]: amount });
+    return true;
+  }
+
+  private moneyArrayForPatch(section: AiCoachPatch['section']): FormArray | null {
+    return ({
+      incomeItems: this.income,
+      recurringExpenses: this.recurring,
+      investments: this.investments,
+      borrowingShortages: this.borrowing,
+      variableBudgets: null
+    })[section];
+  }
+
+  private createMoneyPatchLine(section: AiCoachPatch['section']): FormGroup {
+    return section === 'borrowingShortages' ? this.optionalBorrowingLine('', 0, '') : this.optionalMoneyLine('', 0);
+  }
+
+  private isAllowedInvestmentPatchName(name: string): boolean {
+    const normalized = this.normalizeInvestmentName(name);
+    return normalized === 'savings buffer' || this.store.investments().holdings.some((holding) => this.normalizeInvestmentName(holding.name) === normalized);
   }
 
   private moneyLine(name: string, amount: number) {

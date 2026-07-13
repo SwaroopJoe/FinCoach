@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { DashboardSummary, FeedbackEntry, FinancialGoal, GoalContribution, InvestmentContribution, InvestmentHolding, InvestmentSummary, MonthlyPlan, UserProfile } from '../models/finance.models';
+import { AiCoachRequest, AiCoachResponse, DashboardSummary, FeedbackEntry, FinancialGoal, GoalContribution, InvestmentContribution, InvestmentHolding, InvestmentSummary, MonthlyPlan, UserProfile } from '../models/finance.models';
 import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -99,6 +99,10 @@ export class ApiService {
 
   createFeedbackEntry(entry: Omit<FeedbackEntry, 'id' | 'status' | 'createdAtUtc'>): Observable<FeedbackEntry> {
     return this.http.post<FeedbackEntry>(`${this.baseUrl}/feedback`, entry);
+  }
+
+  getAiMonthlyCoach(request: AiCoachRequest): Observable<AiCoachResponse> {
+    return this.http.post<AiCoachResponse>(`${this.baseUrl}/ai-coach/monthly`, request);
   }
 }
 

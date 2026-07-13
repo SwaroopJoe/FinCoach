@@ -52,3 +52,8 @@ public interface IFeedbackService
     Task<IReadOnlyCollection<FeedbackEntryResponse>> GetRecentAsync(CancellationToken cancellationToken);
     Task<FeedbackEntryResponse> CreateAsync(FeedbackEntryRequest request, CancellationToken cancellationToken);
 }
+
+public interface IAiCoachService
+{
+    Task<AiCoachResponse> GetMonthlyCoachAsync(AiCoachRequest request, CancellationToken cancellationToken);
+}
