@@ -49,16 +49,34 @@ public sealed class AiCoachService(
             var response = await RequestGeminiAsync(snapshot, cancellationToken);
             return Sanitize(response, snapshot, true);
         }
-        catch
+        catch (Exception exception)
         {
-            return CreateFallback(snapshot, "Gemini was unavailable, so Financial Coach generated practical guidance from your saved plan.");
+            return CreateFallback(snapshot, $"Gemini was unavailable ({DescribeFailure(exception)}), so Financial Coach generated practical guidance from your saved plan.");
         }
     }
 
     private async Task<AiCoachResponse> RequestGeminiAsync(AiCoachSnapshot snapshot, CancellationToken cancellationToken)
     {
+        Exception? lastException = null;
+
+        foreach (var model in CandidateModels(configuration["Gemini:Model"]))
+        {
+            try
+            {
+                return await RequestGeminiModelAsync(snapshot, model, cancellationToken);
+            }
+            catch (Exception exception) when (exception is HttpRequestException or JsonException or InvalidOperationException)
+            {
+                lastException = exception;
+            }
+        }
+
+        throw new InvalidOperationException("Gemini request failed for all configured models.", lastException);
+    }
+
+    private async Task<AiCoachResponse> RequestGeminiModelAsync(AiCoachSnapshot snapshot, string model, CancellationToken cancellationToken)
+    {
         var apiKey = configuration["Gemini:ApiKey"];
-        var model = configuration["Gemini:Model"] ?? "gemini-1.5-flash";
         var baseUrl = configuration["Gemini:BaseUrl"] ?? "https://generativelanguage.googleapis.com/v1beta";
         var url = $"{baseUrl.TrimEnd('/')}/models/{Uri.EscapeDataString(model)}:generateContent?key={Uri.EscapeDataString(apiKey!)}";
         var prompt = BuildPrompt(snapshot);
@@ -95,6 +113,31 @@ public sealed class AiCoachService(
         }
 
         return JsonSerializer.Deserialize<AiCoachResponse>(text, JsonOptions) ?? throw new InvalidOperationException("Gemini returned invalid JSON.");
+    }
+
+    private static IReadOnlyCollection<string> CandidateModels(string? configuredModel)
+    {
+        var models = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(configuredModel))
+        {
+            models.Add(configuredModel.Trim());
+        }
+
+        models.AddRange(["gemini-2.0-flash", "gemini-1.5-flash"]);
+        return models.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+    }
+
+    private static string DescribeFailure(Exception exception)
+    {
+        var root = exception.GetBaseException();
+
+        if (root is HttpRequestException httpException && httpException.StatusCode.HasValue)
+        {
+            return $"HTTP {(int)httpException.StatusCode.Value}";
+        }
+
+        return root.GetType().Name;
     }
 
     private static string BuildPrompt(AiCoachSnapshot snapshot) => $$"""
