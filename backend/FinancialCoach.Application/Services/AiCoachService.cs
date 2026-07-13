@@ -121,12 +121,16 @@ public sealed class AiCoachService(
 
         if (!string.IsNullOrWhiteSpace(configuredModel))
         {
-            models.Add(configuredModel.Trim());
+            models.Add(NormalizeModelName(configuredModel));
         }
 
-        models.AddRange(["gemini-2.0-flash", "gemini-1.5-flash"]);
+        models.AddRange(["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash-latest", "gemini-1.5-flash"]);
         return models.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
     }
+
+    private static string NormalizeModelName(string model) => model.Trim().StartsWith("models/", StringComparison.OrdinalIgnoreCase)
+        ? model.Trim()["models/".Length..]
+        : model.Trim();
 
     private static string DescribeFailure(Exception exception)
     {
